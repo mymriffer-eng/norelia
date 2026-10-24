@@ -1,0 +1,185 @@
+{% extends 'admin/base_site.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Norelia Admin{% endblock %}
+
+{% block content %}
+<h1>Dashboard</h1>
+
+<div class="row" style="margin-bottom: 20px;">
+    <!-- Today's Stats -->
+    <div class="col-md-3">
+        <div class="card" style="padding: 20px; background: #e3f2fd;">
+            <h3 style="margin: 0; color: #1976d2;">{{ orders_today_count }}</h3>
+            <p style="margin: 5px 0 0 0; color: #666;">Поръчки днес</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card" style="padding: 20px; background: #e8f5e9;">
+            <h3 style="margin: 0; color: #388e3c;">{{ revenue_today|floatformat:2 }} лв.</h3>
+            <p style="margin: 5px 0 0 0; color: #666;">Оборот днес</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card" style="padding: 20px; background: #fff3e0;">
+            <h3 style="margin: 0; color: #f57c00;">{{ orders_month_count }}</h3>
+            <p style="margin: 5px 0 0 0; color: #666;">Поръчки за месеца</p>
+        </div>
+    </div>
+    
+    <div class="col-md-3">
+        <div class="card" style="padding: 20px; background: #f3e5f5;">
+            <h3 style="margin: 0; color: #7b1fa2;">{{ revenue_month|floatformat:2 }} лв.</h3>
+            <p style="margin: 5px 0 0 0; color: #666;">Оборот за месеца</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Recent Orders -->
+    <div class="col-md-6" style="margin-bottom: 20px;">
+        <div class="module">
+            <h2>Последни поръчки</h2>
+            <table style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Номер</th>
+                        <th>Клиент</th>
+                        <th>Сума</th>
+                        <th>Статус</th>
+                        <th>Дата</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'admin:orders_order_change' order.id %}">
+                                {{ order.order_number }}
+                            </a>
+                        </td>
+                        <td>{{ order.get_full_name }}</td>
+                        <td>{{ order.total }} лв.</td>
+                        <td>
+                            <span class="badge" style="background: 
+                                {% if order.status == 'new' %}#17a2b8
+                                {% elif order.status == 'confirmed' %}#007bff
+                                {% elif order.status == 'shipped' %}#ffc107
+                                {% elif order.status == 'delivered' %}#28a745
+                                {% else %}#dc3545{% endif %}; 
+                                color: white; padding: 3px 8px; border-radius: 3px;">
+                                {{ order.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ order.created_at|date:"d.m.Y H:i" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">Няма поръчки</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <!-- Best Sellers -->
+    <div class="col-md-6" style="margin-bottom: 20px;">
+        <div class="module">
+            <h2>Най-продавани продукти (30 дни)</h2>
+            <table style="width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Продукт</th>
+                        <th>Продадени</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in best_sellers %}
+                    <tr>
+                        <td>{{ item.product__name }}</td>
+                        <td><strong>{{ item.total_sold }}</strong></td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2">Няма данни</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Out of Stock -->
+    <div class="col-md-6" style="margin-bottom: 20px;">
+        <div class="module">
+            <h2 style="color: #dc3545;">Продукти без наличност</h2>
+            {% if out_of_stock %}
+                <ul style="list-style: none; padding: 0;">
+                    {% for product in out_of_stock %}
+                    <li style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <a href="{% url 'admin:shop_product_change' product.id %}">
+                            {{ product.name }} ({{ product.sku }})
+                        </a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: #28a745;">✓ Всички продукти са на склад</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Low Stock -->
+    <div class="col-md-6" style="margin-bottom: 20px;">
+        <div class="module">
+            <h2 style="color: #ffc107;">Продукти с ниска наличност</h2>
+            {% if low_stock %}
+                <ul style="list-style: none; padding: 0;">
+                    {% for inventory in low_stock %}
+                    <li style="padding: 5px 0; border-bottom: 1px solid #eee;">
+                        <a href="{% url 'admin:shop_product_change' inventory.product.id %}">
+                            {{ inventory.product.name }}
+                        </a>
+                        <span style="color: #f57c00; font-weight: bold;">
+                            ({{ inventory.current_quantity }} бр.)
+                        </span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p style="color: #28a745;">✓ Няма продукти с ниска наличност</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: 0 -10px;
+}
+.col-md-3, .col-md-6 {
+    padding: 0 10px;
+    box-sizing: border-box;
+}
+.col-md-3 {
+    flex: 0 0 25%;
+    max-width: 25%;
+}
+.col-md-6 {
+    flex: 0 0 50%;
+    max-width: 50%;
+}
+.card {
+    margin-bottom: 20px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+</style>
+{% endblock %}

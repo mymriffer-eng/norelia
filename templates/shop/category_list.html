@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Категории - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Всички категории</h1>
+    
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <a href="{{ category.get_absolute_url }}" class="text-decoration-none">
+                <div class="card h-100 category-card">
+                    {% if category.image %}
+                        <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}">
+                    {% else %}
+                        <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                        </div>
+                    {% endif %}
+                    <div class="card-body text-center">
+                        <h5 class="card-title">{{ category.name }}</h5>
+                        <p class="text-muted mb-0">{{ category.get_products_count }} продукта</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">Няма налични категории.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

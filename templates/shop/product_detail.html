@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load core_tags %}
+
+{% block title %}{{ product.meta_title|default:product.name }} - {{ block.super }}{% endblock %}
+
+{% block meta %}
+{% if product.meta_description %}
+<meta name="description" content="{{ product.meta_description }}">
+{% else %}
+<meta name="description" content="{{ product.short_description }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <!-- Product Images -->
+        <div class="col-md-6 mb-4">
+            <div class="product-image-main mb-3">
+                {% if product.image %}
+                    <img src="{{ product.image.url }}" class="img-fluid rounded" alt="{{ product.name }}" id="mainImage">
+                {% else %}
+                    <div class="bg-light d-flex align-items-center justify-content-center rounded" style="height: 500px;">
+                        <i class="bi bi-image text-muted" style="font-size: 5rem;"></i>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Additional Images -->
+            {% if product.images.all %}
+            <div class="row g-2">
+                <div class="col-3">
+                    <img src="{{ product.image.url }}" class="img-fluid rounded cursor-pointer thumbnail-image" alt="{{ product.name }}" onclick="changeImage(this.src)">
+                </div>
+                {% for image in product.images.all %}
+                <div class="col-3">
+                    <img src="{{ image.image.url }}" class="img-fluid rounded cursor-pointer thumbnail-image" alt="{{ product.name }}" onclick="changeImage(this.src)">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Product Info -->
+        <div class="col-md-6">
+            {% if product.brand %}
+                <p class="text-muted mb-2">{{ product.brand }}</p>
+            {% endif %}
+            
+            <h1 class="h2 mb-3">{{ product.name }}</h1>
+            
+            <div class="mb-3">
+                <span class="badge bg-secondary">SKU: {{ product.sku }}</span>
+                {% if product.category %}
+                    <a href="{{ product.category.get_absolute_url }}" class="badge bg-primary text-decoration-none">
+                        {{ product.category.name }}
+                    </a>
+                {% endif %}
+            </div>
+            
+            <!-- Price -->
+            <div class="mb-4">
+                {% if product.old_price %}
+                    <h3 class="text-danger mb-0">{{ product.price }} лв.</h3>
+                    <p class="text-muted">
+                        <span class="text-decoration-line-through">{{ product.old_price }} лв.</span>
+                        <span class="badge bg-danger ms-2">-{{ product.old_price|discount_percentage:product.price }}%</span>
+                    </p>
+                {% else %}
+                    <h3 class="mb-0">{{ product.price }} лв.</h3>
+                {% endif %}
+            </div>
+            
+            <!-- Short Description -->
+            {% if product.short_description %}
+                <p class="lead">{{ product.short_description }}</p>
+            {% endif %}
+            
+            <!-- Stock Status -->
+            <div class="mb-3">
+                {% if product.is_in_stock %}
+                    <p class="text-success">
+                        <i class="bi bi-check-circle"></i> В наличност
+                    </p>
+                {% else %}
+                    <p class="text-danger">
+                        <i class="bi bi-x-circle"></i> Няма наличност
+                    </p>
+                {% endif %}
+            </div>
+            
+            <!-- Add to Cart -->
+            {% if product.is_in_stock %}
+                <form method="post" action="{% url 'shop:add_to_cart' product.id %}" class="mb-4">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-auto">
+                            <label for="quantity" class="col-form-label">Количество:</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="number" name="quantity" id="quantity" class="form-control" value="1" min="1" max="{{ product.stock_quantity }}" style="width: 80px;">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-cart-plus"></i> Добави в количката
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            {% else %}
+                <button class="btn btn-secondary btn-lg mb-4" disabled>
+                    Няма наличност
+                </button>
+            {% endif %}
+            
+            <hr>
+            
+            <!-- Description -->
+            {% if product.description %}
+                <h4>Описание</h4>
+                <div class="product-description">
+                    {{ product.description|linebreaks }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Related Products -->
+    {% if related_products %}
+    <section class="related-products mt-5">
+        <h3 class="mb-4">Свързани продукти</h3>
+        <div class="row g-4">
+            {% for product in related_products %}
+            <div class="col-6 col-md-3">
+                {% include 'shop/product_card.html' with product=product %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+
+<script>
+function changeImage(src) {
+    document.getElementById('mainImage').src = src;
+}
+</script>
+{% endblock %}

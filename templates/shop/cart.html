@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load core_tags %}
+
+{% block title %}Количка - {{ block.super }}{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Количка</h1>
+    
+    {% if cart_items %}
+        <div class="row">
+            <div class="col-lg-8">
+                <div class="card">
+                    <div class="card-body">
+                        {% for item in cart_items %}
+                        <div class="cart-item row align-items-center mb-3 pb-3 {% if not forloop.last %}border-bottom{% endif %}">
+                            <div class="col-md-2">
+                                {% if item.product.image %}
+                                    <img src="{{ item.product.image.url }}" class="img-fluid" alt="{{ item.product.name }}">
+                                {% else %}
+                                    <div class="bg-light d-flex align-items-center justify-content-center" style="height: 80px;">
+                                        <i class="bi bi-image text-muted"></i>
+                                    </div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                <h5>
+                                    <a href="{{ item.product.get_absolute_url }}" class="text-decoration-none">
+                                        {{ item.product.name }}
+                                    </a>
+                                </h5>
+                                <p class="text-muted mb-0">{{ item.product.price }} лв.</p>
+                            </div>
+                            <div class="col-md-3">
+                                <form method="post" action="{% url 'shop:update_cart' item.product.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <div class="input-group" style="max-width: 130px;">
+                                        <input type="number" name="quantity" class="form-control" value="{{ item.quantity }}" min="1" max="{{ item.product.stock_quantity }}">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <strong>{{ item.subtotal }} лв.</strong>
+                            </div>
+                            <div class="col-md-1 text-end">
+                                <form method="post" action="{% url 'shop:remove_from_cart' item.product.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="mt-3">
+                    <a href="{% url 'core:home' %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Продължи пазаруването
+                    </a>
+                    <form method="post" action="{% url 'shop:clear_cart' %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Сигурни ли сте?')">
+                            <i class="bi bi-trash"></i> Изчисти количката
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Обобщение</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Междинна сума:</span>
+                            <strong>{{ total }} лв.</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <span>Доставка:</span>
+                            <span class="text-muted">Изчислява се при поръчка</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Обща сума:</strong>
+                            <strong class="text-primary">{{ total }} лв.</strong>
+                        </div>
+                        
+                        <a href="{% url 'shop:checkout' %}" class="btn btn-primary btn-lg w-100">
+                            Към поръчка <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center">
+            <i class="bi bi-cart-x" style="font-size: 3rem;"></i>
+            <p class="mt-3 mb-3">Количката е празна</p>
+            <a href="{% url 'core:home' %}" class="btn btn-primary">
+                Разгледай продукти
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

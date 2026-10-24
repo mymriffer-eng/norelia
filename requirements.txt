@@ -1,0 +1,32 @@
+# Core
+Django>=5.0
+python-decouple>=3.8
+django-environ>=0.11.2
+
+# Database
+psycopg2-binary>=2.9.9
+
+# Authentication
+django-allauth>=0.63
+
+# Images
+Pillow>=10.4.0
+
+# Static files
+whitenoise==6.6.0
+
+# PDF Generation
+reportlab==4.2.0
+
+# Forms
+django-crispy-forms>=2.1
+crispy-bootstrap5>=2026.3
+
+# Security
+django-cors-headers==4.3.1
+
+# Utilities
+python-slugify==8.0.4
+
+# Production
+gunicorn==22.0.0

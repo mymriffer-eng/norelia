@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load core_tags %}
+
+{% block title %}{{ site_settings.site_name }} - Korean Cosmetics Shop{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Открийте красотата на корейската козметика</h1>
+                <p class="lead mb-4">Висококачествени продукти за грижа за кожата директно от Корея</p>
+                <a href="{% url 'shop:category_list' %}" class="btn btn-primary btn-lg">Разгледай продукти</a>
+            </div>
+            <div class="col-lg-6">
+                <img src="{% static 'images/hero-image.jpg' %}" class="img-fluid rounded" alt="Korean Cosmetics" onerror="this.style.display='none'">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+{% if categories %}
+<section class="categories py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Популярни категории</h2>
+        <div class="row g-4">
+            {% for category in categories %}
+            <div class="col-6 col-md-4 col-lg-3">
+                <a href="{{ category.get_absolute_url }}" class="text-decoration-none">
+                    <div class="card h-100 category-card">
+                        {% if category.image %}
+                            <img src="{{ category.image.url }}" class="card-img-top" alt="{{ category.name }}">
+                        {% else %}
+                            <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="bi bi-image text-muted" style="font-size: 3rem;"></i>
+                            </div>
+                        {% endif %}
+                        <div class="card-body text-center">
+                            <h5 class="card-title">{{ category.name }}</h5>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- New Products Section -->
+{% if new_products %}
+<section class="new-products py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Нови продукти</h2>
+        <div class="row g-4">
+            {% for product in new_products %}
+            <div class="col-6 col-md-3">
+                {% include 'shop/product_card.html' with product=product %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Best Sellers Section -->
+{% if best_sellers %}
+<section class="best-sellers py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Най-продавани</h2>
+        <div class="row g-4">
+            {% for product in best_sellers %}
+            <div class="col-6 col-md-3">
+                {% include 'shop/product_card.html' with product=product %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Sale Products Section -->
+{% if sale_products %}
+<section class="sale-products py-5 bg-light">
+    <div class="container">
+        <h2 class="text-center mb-5">Промоции</h2>
+        <div class="row g-4">
+            {% for product in sale_products %}
+            <div class="col-6 col-md-3">
+                {% include 'shop/product_card.html' with product=product %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Testimonials Section -->
+{% if testimonials %}
+<section class="testimonials py-5">
+    <div class="container">
+        <h2 class="text-center mb-5">Отзиви от клиенти</h2>
+        <div class="row g-4">
+            {% for testimonial in testimonials %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= testimonial.rating %}
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                {% else %}
+                                    <i class="bi bi-star text-warning"></i>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        <p class="card-text">{{ testimonial.text }}</p>
+                        <footer class="blockquote-footer mt-2">{{ testimonial.name }}</footer>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Newsletter Section -->
+<section class="newsletter py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-md-6 mb-3 mb-md-0">
+                <h3>Абонирайте се за нашия бюлетин</h3>
+                <p class="mb-0">Получавайте информация за нови продукти и промоции</p>
+            </div>
+            <div class="col-md-6">
+                <form method="post" action="{% url 'core:newsletter_subscribe' %}">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="email" name="email" class="form-control" placeholder="Вашият имейл" required>
+                        <button class="btn btn-light" type="submit">Абонирай се</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
