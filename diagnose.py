@@ -204,9 +204,13 @@ def http_requests():
             resp = client.get(path, secure=True)
             location = resp.headers.get("Location", "")
             print(f"GET {path:30} -> {resp.status_code} {location}")
-        except Exception:
-            print(f"GET {path:30} -> EXCEPTION")
-            traceback.print_exc(file=sys.stdout)
+        except Exception as exc:
+            print(f"GET {path:30} -> EXCEPTION: {type(exc).__name__}: {exc}")
+            tb = traceback.format_exception(type(exc), exc, exc.__traceback__)
+            print("".join(tb[-6:]))
+            if exc.__cause__ or exc.__context__:
+                cause = exc.__cause__ or exc.__context__
+                print(f"  caused by: {type(cause).__name__}: {cause}")
 
 
 if __name__ == "__main__":

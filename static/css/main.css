@@ -1,0 +1,190 @@
+/* Norelia - Korean Cosmetics Shop - Custom Styles */
+
+:root {
+    --primary-color: #C59D5F;
+    --light-pink: #FFE4E9;
+    --gold-accent: #D4AF37;
+    --text-dark: #333;
+    --text-muted: #6c757d;
+}
+
+body {
+    font-family: 'Montserrat', sans-serif;
+    color: var(--text-dark);
+}
+
+/* Brand Name */
+.brand-name {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--primary-color);
+    letter-spacing: 1px;
+}
+
+/* Navbar */
+.navbar {
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.navbar-light .navbar-nav .nav-link {
+    color: var(--text-dark);
+    font-weight: 500;
+    transition: color 0.3s;
+}
+
+.navbar-light .navbar-nav .nav-link:hover {
+    color: var(--primary-color);
+}
+
+/* Buttons */
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: #B38A4D;
+    border-color: #B38A4D;
+}
+
+/* Hero Section */
+.hero {
+    background: linear-gradient(135deg, var(--light-pink) 0%, #fff 100%);
+}
+
+/* Category Card */
+.category-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #e0e0e0;
+}
+
+.category-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.category-card .card-img-top {
+    height: 200px;
+    object-fit: cover;
+}
+
+/* Product Card */
+.product-card {
+    transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #e0e0e0;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.product-card .card-img-top {
+    height: 250px;
+    object-fit: cover;
+}
+
+.product-card .card-title {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-dark);
+    min-height: 40px;
+}
+
+.product-card .card-body {
+    padding: 1rem;
+}
+
+.product-card .card-footer {
+    padding: 0.75rem 1rem;
+}
+
+/* Product Detail Page */
+.product-image-main img {
+    max-height: 500px;
+    object-fit: contain;
+}
+
+.thumbnail-image {
+    cursor: pointer;
+    transition: opacity 0.3s;
+    border: 2px solid transparent;
+}
+
+.thumbnail-image:hover {
+    opacity: 0.7;
+    border-color: var(--primary-color);
+}
+
+/* Cart */
+.cart-item {
+    transition: background-color 0.3s;
+}
+
+.cart-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Footer */
+.footer {
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer h5 {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.footer a {
+    color: var(--text-dark);
+    transition: color 0.3s;
+}
+
+.footer a:hover {
+    color: var(--primary-color);
+}
+
+/* Badges */
+.badge {
+    padding: 0.5em 0.75em;
+}
+
+/* Utilities */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+/* Forms */
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(197, 157, 95, 0.25);
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .brand-name {
+        font-size: 1.5rem;
+    }
+    
+    .hero h1 {
+        font-size: 2rem;
+    }
+}
