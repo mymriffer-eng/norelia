@@ -173,6 +173,40 @@ def passenger_info():
     for name in ("passenger_wsgi.py", "wsgi.py"):
         path = BASE_DIR / name
         print(f"{name:20} exists: {path.exists()}")
+    path = BASE_DIR / "passenger_wsgi.py"
+    if path.exists():
+        print("--- passenger_wsgi.py content ---")
+        print(path.read_text(encoding="utf-8", errors="replace"))
+        print("--- end ---")
+    for log in ("stderr.log", "logs/passenger.log", "tmp/restart.txt"):
+        p = BASE_DIR / log
+        print(f"{log:20} exists: {p.exists()}")
+        if p.exists() and p.suffix == ".log":
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+            print("\n".join(lines[-40:]))
+
+
+def http_requests():
+    from django.conf import settings
+    from django.test import Client
+
+    host = settings.ALLOWED_HOSTS[0]
+    client = Client(SERVER_NAME=host, raise_request_exception=True)
+    admin = "/" + settings.ADMIN_URL if hasattr(settings, "ADMIN_URL") else "/admin/"
+    paths = ["/", "/accounts/login/", "/sitemap.xml", "/static/css/main.css"]
+    try:
+        import environ
+        paths.append("/" + environ.Env()("ADMIN_URL", default="admin/"))
+    except Exception:
+        paths.append(admin)
+    for path in paths:
+        try:
+            resp = client.get(path, secure=True)
+            location = resp.headers.get("Location", "")
+            print(f"GET {path:30} -> {resp.status_code} {location}")
+        except Exception:
+            print(f"GET {path:30} -> EXCEPTION")
+            traceback.print_exc(file=sys.stdout)
 
 
 if __name__ == "__main__":
@@ -187,5 +221,6 @@ if __name__ == "__main__":
     run("9. DJANGO CHECK", django_check)
     run("10. URL CONF", urls_info)
     run("11. WSGI IMPORT", wsgi_info)
-    run("12. PASSENGER FILES", passenger_info)
+    run("12. PASSENGER FILES / LOGS", passenger_info)
+    run("13. HTTP REQUESTS (Django test client)", http_requests)
     print("\nDone.")
