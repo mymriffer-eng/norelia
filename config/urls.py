@@ -6,6 +6,15 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.sitemaps.views import sitemap
+import environ
+import os
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+env = environ.Env()
+environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+ADMIN_URL = env('ADMIN_URL', default='admin/')
+
 from apps.shop.sitemaps import ProductSitemap, CategorySitemap
 
 # Sitemaps
@@ -16,7 +25,7 @@ sitemaps = {
 
 urlpatterns = [
     # Admin
-    path('admin/', admin.site.urls),
+    path(ADMIN_URL, admin.site.urls),
     
     # Apps
     path('', include('apps.core.urls')),
