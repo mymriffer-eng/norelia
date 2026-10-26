@@ -91,10 +91,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
+DB_ENGINE = env('DB_ENGINE', default='django.db.backends.sqlite3')
+DB_NAME = env('DB_NAME', default='db.sqlite3')
 DATABASES = {
     'default': {
-        'ENGINE': env('DB_ENGINE', default='django.db.backends.sqlite3'),
-        'NAME': BASE_DIR / env('DB_NAME', default='db.sqlite3'),
+        'ENGINE': DB_ENGINE,
+        'NAME': str(BASE_DIR / DB_NAME) if DB_ENGINE == 'django.db.backends.sqlite3' else DB_NAME,
         'USER': env('DB_USER', default=''),
         'PASSWORD': env('DB_PASSWORD', default=''),
         'HOST': env('DB_HOST', default=''),

@@ -5,6 +5,7 @@ django-environ>=0.11.2
 
 # Database
 psycopg2-binary>=2.9.9
+mysqlclient
 
 # Authentication
 django-allauth>=0.63
