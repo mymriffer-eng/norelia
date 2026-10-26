@@ -8,6 +8,7 @@ psycopg2-binary>=2.9.9
 
 # Authentication
 django-allauth>=0.63
+requests>=2.32.0
 
 # Images
 Pillow>=10.4.0
