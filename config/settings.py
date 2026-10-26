@@ -90,6 +90,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# MySQL driver: use mysqlclient if available, otherwise pure-Python PyMySQL
+try:
+    import MySQLdb  # noqa: F401
+except ImportError:
+    try:
+        import pymysql
+        pymysql.version_info = (2, 2, 1, 'final', 0)  # satisfy Django's mysqlclient version check
+        pymysql.install_as_MySQLdb()
+    except ImportError:
+        pass
+
 # Database
 DB_ENGINE = env('DB_ENGINE', default='django.db.backends.sqlite3')
 DB_NAME = env('DB_NAME', default='db.sqlite3')
