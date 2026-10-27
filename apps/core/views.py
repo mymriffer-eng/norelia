@@ -104,7 +104,7 @@ def robots_txt(request):
         "Disallow: /cart/",
         "Disallow: /checkout/",
         "",
-        "Sitemap: https://norelia.com/sitemap.xml"
+        "Sitemap: " + request.build_absolute_uri('/sitemap.xml')
     ]
     
     return HttpResponse("\n".join(lines), content_type="text/plain")
