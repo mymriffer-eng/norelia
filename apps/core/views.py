@@ -34,7 +34,7 @@ class HomeView(TemplateView):
         
         # Get best sellers (products with most orders)
         from apps.orders.models import OrderItem
-        best_seller_ids = (
+        best_seller_ids = list(
             OrderItem.objects
             .values('product_id')
             .annotate(total_sold=Sum('quantity'))
