@@ -23,9 +23,18 @@ def chmod(path, mode):
         print(f"{oct(before)} -> {oct(mode)}  {path}")
 
 
-# Parent folder (e.g. ~/repositories) must be traversable
-if BASE_DIR.parent.name == "repositories":
-    chmod(BASE_DIR.parent, 0o755)
+# Every parent folder up to the home directory must be traversable by Apache
+home = Path.home()
+print("Ancestor folder modes:")
+for parent in BASE_DIR.parents:
+    if home not in parent.parents and parent != home:
+        break
+    print(f"  {oct(mode_of(parent))}  {parent}")
+    if parent == home:
+        if not mode_of(parent) & stat.S_IXOTH:
+            chmod(parent, 0o711)
+    elif parent.name == "repositories":
+        chmod(parent, 0o755)
 
 chmod(BASE_DIR, 0o755)
 
