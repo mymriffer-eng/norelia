@@ -258,6 +258,28 @@ MESSAGE_TAGS = {
     messages.ERROR: 'danger',
 }
 
+# Logging: write server errors (500) to logs/django_errors.log
+LOG_DIR = BASE_DIR / 'logs'
+try:
+    LOG_DIR.mkdir(exist_ok=True)
+    _error_handler = {
+        'class': 'logging.FileHandler',
+        'filename': str(LOG_DIR / 'django_errors.log'),
+        'level': 'ERROR',
+        'encoding': 'utf-8',
+    }
+except OSError:
+    _error_handler = {'class': 'logging.StreamHandler', 'level': 'ERROR'}
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {'error_file': _error_handler},
+    'loggers': {
+        'django': {'handlers': ['error_file'], 'level': 'ERROR', 'propagate': True},
+    },
+}
+
 # Invoice settings
 INVOICE_NUMBER_PREFIX = '2026'
 INVOICE_START_NUMBER = 1

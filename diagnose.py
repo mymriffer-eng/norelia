@@ -178,7 +178,7 @@ def passenger_info():
         print("--- passenger_wsgi.py content ---")
         print(path.read_text(encoding="utf-8", errors="replace"))
         print("--- end ---")
-    for log in ("stderr.log", "logs/passenger.log", "tmp/restart.txt"):
+    for log in ("stderr.log", "logs/passenger.log", "logs/django_errors.log", "tmp/restart.txt"):
         p = BASE_DIR / log
         print(f"{log:20} exists: {p.exists()}")
         if p.exists() and p.suffix == ".log":
