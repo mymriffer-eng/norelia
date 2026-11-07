@@ -178,6 +178,62 @@ body {
     border-color: var(--primary-color);
 }
 
+/* Auth pages (allauth) */
+.auth-wrapper {
+    padding: 4rem 0;
+    background: linear-gradient(135deg, var(--light-pink) 0%, #fff 100%);
+}
+
+.auth-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+}
+
+.auth-title {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.auth-card a:not(.btn) {
+    color: var(--primary-color);
+}
+
+.auth-card input:not([type=checkbox]):not([type=radio]):not([type=hidden]),
+.auth-card select,
+.auth-card textarea {
+    display: block;
+    width: 100%;
+    padding: 0.5rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #212529;
+    background-color: #fff;
+    border: 1px solid #ced4da;
+    border-radius: 0.375rem;
+}
+
+.auth-card input:focus,
+.auth-card select:focus,
+.auth-card textarea:focus {
+    border-color: var(--primary-color);
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(197, 157, 95, 0.25);
+}
+
+.auth-card input[type=checkbox] {
+    accent-color: var(--primary-color);
+}
+
+.auth-card .btn-outline-primary {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.auth-card .btn-outline-primary:hover {
+    background-color: var(--primary-color);
+    color: #fff;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .brand-name {
