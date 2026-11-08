@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 from django.utils import timezone
 from reportlab.lib.pagesizes import A4
@@ -48,16 +49,47 @@ class InvoiceService:
         buffer = BytesIO()
         
         # Register fonts with Cyrillic support
-        try:
-            # Try to register Windows Arial fonts (support Cyrillic)
-            pdfmetrics.registerFont(TTFont('Arial', 'C:/Windows/Fonts/arial.ttf'))
-            pdfmetrics.registerFont(TTFont('Arial-Bold', 'C:/Windows/Fonts/arialbd.ttf'))
-            font_name = 'Arial'
-            font_bold = 'Arial-Bold'
-        except:
-            # Fallback to Helvetica if Arial is not found
-            font_name = 'Helvetica'
-            font_bold = 'Helvetica-Bold'
+        # Prefer Windows Arial when available; otherwise fall back to common Linux fonts
+        # that include Cyrillic glyphs. Helvetica does not support Bulgarian/Cyrillic text.
+        font_candidates = {
+            'Arial': [
+                'C:/Windows/Fonts/arial.ttf',
+                'C:/Windows/Fonts/arial.ttf',
+                'C:/Windows/Fonts/calibri.ttf',
+            ],
+            'Arial-Bold': [
+                'C:/Windows/Fonts/arialbd.ttf',
+                'C:/Windows/Fonts/arialbd.ttf',
+                'C:/Windows/Fonts/calibrib.ttf',
+            ],
+            'DejaVuSans': [
+                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
+                '/usr/local/share/fonts/DejaVuSans.ttf',
+            ],
+            'DejaVuSans-Bold': [
+                '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
+                '/usr/local/share/fonts/DejaVuSans-Bold.ttf',
+            ],
+        }
+
+        font_name = 'Helvetica'
+        font_bold = 'Helvetica-Bold'
+
+        for font_key, paths in font_candidates.items():
+            for path in paths:
+                if not path or not os.path.exists(path):
+                    continue
+                try:
+                    pdfmetrics.registerFont(TTFont(font_key, path))
+                    if font_key == 'Arial' or font_key == 'DejaVuSans':
+                        font_name = font_key
+                    if font_key == 'Arial-Bold' or font_key == 'DejaVuSans-Bold':
+                        font_bold = font_key
+                    break
+                except Exception:
+                    continue
+            if font_name != 'Helvetica' and font_bold != 'Helvetica-Bold':
+                break
         
         # Create PDF document
         doc = SimpleDocTemplate(
