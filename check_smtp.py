@@ -3,19 +3,43 @@ import socket
 import smtplib
 from pathlib import Path
 
-# Load .env if it exists
-try:
-    from dotenv import load_dotenv
-    load_dotenv(Path(__file__).resolve().parent / '.env')
-except Exception:
-    pass
+
+def _read_env_file(env_path: Path):
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text(encoding='utf-8').splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith('#') or '=' not in line:
+            continue
+
+        key, value = [part.strip() for part in line.split('=', 1)]
+        if not key or key in os.environ:
+            continue
+
+        os.environ[key] = value.strip().strip('"').strip("'")
+
+
+def _as_bool(value):
+    return str(value).strip().lower() in {'1', 'true', 'yes', 'y', 'on'}
+
+
+_read_env_file(Path(__file__).resolve().parent / '.env')
 
 host = os.getenv('EMAIL_HOST', '').strip()
-port = int(os.getenv('EMAIL_PORT', '465'))
+port_value = os.getenv('EMAIL_PORT', '465').strip() or '465'
+try:
+    port = int(port_value)
+except ValueError:
+    port = 465
+
 user = os.getenv('EMAIL_HOST_USER', '').strip()
 password = os.getenv('EMAIL_HOST_PASSWORD', '').strip()
-use_ssl = os.getenv('EMAIL_USE_SSL', 'False').lower() in ('1', 'true', 'yes')
-use_tls = os.getenv('EMAIL_USE_TLS', 'False').lower() in ('1', 'true', 'yes')
+use_ssl = _as_bool(os.getenv('EMAIL_USE_SSL', 'False'))
+use_tls = _as_bool(os.getenv('EMAIL_USE_TLS', 'False'))
+
+if not use_ssl and host and port == 465:
+    use_ssl = True
 
 print('=== SMTP Check ===')
 print(f'HOST={host}')
@@ -46,8 +70,11 @@ try:
         if use_tls:
             server.starttls()
 
-    server.login(user, password)
-    print('SMTP AUTH: SUCCESS')
+    if user and password:
+        server.login(user, password)
+        print('SMTP AUTH: SUCCESS')
+    else:
+        print('SMTP AUTH: SKIPPED (missing user/password)')
     server.quit()
 except Exception as e:
     print('SMTP AUTH: FAILED')
