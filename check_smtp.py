@@ -14,7 +14,7 @@ def _read_env_file(env_path: Path):
             continue
 
         key, value = [part.strip() for part in line.split('=', 1)]
-        if not key or key in os.environ:
+        if not key:
             continue
 
         os.environ[key] = value.strip().strip('"').strip("'")

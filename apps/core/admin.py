@@ -39,8 +39,9 @@ class NewsletterAdmin(admin.ModelAdmin):
     list_display = ['email', 'subscribed_at', 'is_active']
     list_filter = ['is_active', 'subscribed_at']
     search_fields = ['email']
-    date_hierarchy = 'subscribed_at'
     readonly_fields = ['subscribed_at']
+    # date_hierarchy is intentionally omitted because MySQL/MariaDB without timezone tables
+    # can raise "Database returned an invalid datetime value" when the admin tries to group by date.
 
 
 @admin.register(Testimonial)
