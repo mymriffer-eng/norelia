@@ -182,6 +182,7 @@ AUTH_USER_MODEL = 'auth.User'
 
 # Django Allauth configuration
 SITE_ID = 1
+SITE_URL = env('SITE_URL', default='https://norelia.bg')
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
