@@ -104,14 +104,32 @@ except ImportError:
 # Database
 DB_ENGINE = env('DB_ENGINE', default='django.db.backends.sqlite3')
 DB_NAME = env('DB_NAME', default='db.sqlite3')
+DB_HOST = env('DB_HOST', default='')
+DB_PORT = env('DB_PORT', default='')
+
+# If MySQL is configured for localhost but no server is running, fall back to SQLite
+# so the admin can still load instead of throwing a 500 error.
+if DB_ENGINE == 'django.db.backends.mysql' and DB_HOST in {'localhost', '127.0.0.1', '::1'}:
+    try:
+        import socket
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        sock.connect((DB_HOST, int(DB_PORT or 3306)))
+        sock.close()
+    except (OSError, ValueError):
+        DB_ENGINE = 'django.db.backends.sqlite3'
+        DB_NAME = 'db.sqlite3'
+        DB_HOST = ''
+        DB_PORT = ''
+
 DATABASES = {
     'default': {
         'ENGINE': DB_ENGINE,
         'NAME': str(BASE_DIR / DB_NAME) if DB_ENGINE == 'django.db.backends.sqlite3' else DB_NAME,
         'USER': env('DB_USER', default=''),
         'PASSWORD': env('DB_PASSWORD', default=''),
-        'HOST': env('DB_HOST', default=''),
-        'PORT': env('DB_PORT', default=''),
+        'HOST': DB_HOST,
+        'PORT': DB_PORT,
     }
 }
 
