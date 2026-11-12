@@ -141,20 +141,28 @@ body {
 /* Footer */
 .footer {
     border-top: 1px solid #e0e0e0;
+    color: #9B6F60;
 }
 
-.footer h5 {
-    color: var(--primary-color);
+.footer h5,
+.footer .brand-name {
+    color: #9B6F60;
     font-weight: 600;
 }
 
+.footer .text-muted,
+.footer p,
+.footer i {
+    color: #9B6F60 !important;
+}
+
 .footer a {
-    color: var(--text-dark);
+    color: #9B6F60;
     transition: color 0.3s;
 }
 
 .footer a:hover {
-    color: var(--primary-color);
+    color: #7d5649;
 }
 
 /* Badges */
