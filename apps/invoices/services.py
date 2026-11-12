@@ -217,7 +217,7 @@ class InvoiceService:
                 items_data.append(['', '', '', '', f'Търговска отстъпка ({invoice.trade_discount_percent}%):', f'-{invoice.trade_discount_amount:.2f}'])
                 items_data.append(['', '', '', '', 'След отстъпка:', f'{invoice.subtotal_after_discount:.2f}'])
             
-            items_data.append(['', '', '', '', 'Доставка:', f'{invoice.shipping_cost:.2f}'])
+            items_data.append(['Доставка: според тарифата на куриера', '', '', '', '', ''])
             items_data.append(['', '', '', '', 'ОБЩО:', f'{invoice.total:.2f}'])
             
             items_table = Table(items_data, colWidths=[1*cm, 7*cm, 3*cm, 1.5*cm, 2.5*cm, 2*cm])
@@ -238,6 +238,12 @@ class InvoiceService:
                 # Totals
                 ('FONTNAME', (4, -3), (-1, -1), font_bold),
                 ('ALIGN', (4, -3), (-1, -1), 'RIGHT'),
+                
+                # Shipping row: text spans the whole row
+                ('SPAN', (0, -2), (-1, -2)),
+                ('FONTNAME', (0, -2), (0, -2), font_bold),
+                ('FONTSIZE', (0, -2), (0, -2), 9),
+                ('ALIGN', (0, -2), (0, -2), 'RIGHT'),
                 
                 # Grand total
                 ('FONTSIZE', (4, -1), (-1, -1), 12),

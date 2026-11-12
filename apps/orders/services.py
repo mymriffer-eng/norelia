@@ -25,7 +25,8 @@ class OrderService:
         # Extract data
         user = order_data.get('user')
         cart_items = order_data.pop('cart_items')
-        shipping_cost = self.calculate_shipping(order_data.get('total', 0))
+        # Shipping is billed by the courier according to its tariff - not added to the order total
+        shipping_cost = Decimal('0.00')
         
         # Create order
         order = Order.objects.create(
@@ -69,19 +70,6 @@ class OrderService:
             InventoryService.reserve_stock(product, quantity)
         
         return order
-    
-    def calculate_shipping(self, subtotal):
-        """Calculate shipping cost"""
-        from django.conf import settings
-        
-        # Free shipping threshold from settings
-        free_shipping_threshold = Decimal(str(getattr(settings, 'FREE_SHIPPING_THRESHOLD', 100)))
-        
-        if subtotal >= free_shipping_threshold:
-            return Decimal('0.00')
-        
-        # Default shipping cost
-        return Decimal('5.00')
     
     @transaction.atomic
     def confirm_order(self, order):
