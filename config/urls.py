@@ -2,9 +2,10 @@
 URL configuration for Norelia project.
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve as media_serve
 from django.contrib.sitemaps.views import sitemap
 import environ
 import os
@@ -50,3 +51,12 @@ admin.site.index_title = "Welcome to Norelia Admin Panel"
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+else:
+    # Production (Passenger has no web-server rule for /media/): serve uploads via Django
+    urlpatterns += [
+        re_path(
+            r'^%s(?P<path>.*)$' % settings.MEDIA_URL.lstrip('/'),
+            media_serve,
+            {'document_root': settings.MEDIA_ROOT},
+        ),
+    ]
