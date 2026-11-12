@@ -28,6 +28,11 @@ body {
     letter-spacing: 1px;
 }
 
+/* Header brand: rose gold, matching the logo lettering */
+.navbar .brand-name {
+    color: #9B6F60;
+}
+
 /* Navbar */
 .navbar {
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
