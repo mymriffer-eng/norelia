@@ -132,24 +132,30 @@ class OrderAdmin(admin.ModelAdmin):
     # Custom actions
     actions = ['mark_as_confirmed', 'mark_as_shipped', 'mark_as_delivered', 'mark_as_cancelled']
     
+    def _set_status(self, request, queryset, status, label):
+        # save() per order (not queryset.update) so signals fire and the customer gets an email
+        count = 0
+        for order in queryset:
+            if order.status != status:
+                order.status = status
+                order.save()
+                count += 1
+        self.message_user(request, f'{count} orders marked as {label}.')
+    
     def mark_as_confirmed(self, request, queryset):
-        queryset.update(status='confirmed')
-        self.message_user(request, f'{queryset.count()} orders marked as confirmed.')
+        self._set_status(request, queryset, 'confirmed', 'confirmed')
     mark_as_confirmed.short_description = "Mark as Confirmed"
     
     def mark_as_shipped(self, request, queryset):
-        queryset.update(status='shipped')
-        self.message_user(request, f'{queryset.count()} orders marked as shipped.')
+        self._set_status(request, queryset, 'shipped', 'shipped')
     mark_as_shipped.short_description = "Mark as Shipped"
     
     def mark_as_delivered(self, request, queryset):
-        queryset.update(status='delivered')
-        self.message_user(request, f'{queryset.count()} orders marked as delivered.')
+        self._set_status(request, queryset, 'delivered', 'delivered')
     mark_as_delivered.short_description = "Mark as Delivered"
     
     def mark_as_cancelled(self, request, queryset):
-        queryset.update(status='cancelled')
-        self.message_user(request, f'{queryset.count()} orders marked as cancelled.')
+        self._set_status(request, queryset, 'cancelled', 'cancelled')
     mark_as_cancelled.short_description = "Mark as Cancelled"
 
 
