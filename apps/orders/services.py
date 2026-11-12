@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.db import transaction
 from .models import Order, OrderItem
 from apps.inventory.services import InventoryService
@@ -73,13 +75,13 @@ class OrderService:
         from django.conf import settings
         
         # Free shipping threshold from settings
-        free_shipping_threshold = getattr(settings, 'FREE_SHIPPING_THRESHOLD', 100)
+        free_shipping_threshold = Decimal(str(getattr(settings, 'FREE_SHIPPING_THRESHOLD', 100)))
         
         if subtotal >= free_shipping_threshold:
-            return 0
+            return Decimal('0.00')
         
         # Default shipping cost
-        return 5.00
+        return Decimal('5.00')
     
     @transaction.atomic
     def confirm_order(self, order):

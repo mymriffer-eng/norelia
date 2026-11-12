@@ -251,7 +251,11 @@ def checkout(request):
             
             # Use OrderService to create order
             order_service = OrderService()
-            order = order_service.create_order(order_data)
+            try:
+                order = order_service.create_order(order_data)
+            except ValueError:
+                messages.error(request, 'Недостатъчна наличност за някой от продуктите в количката.')
+                return redirect('shop:cart')
             
             if order:
                 # Clear cart
