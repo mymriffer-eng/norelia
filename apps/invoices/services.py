@@ -51,7 +51,14 @@ class InvoiceService:
         # Register fonts with Cyrillic support
         # Prefer Windows Arial when available; otherwise fall back to common Linux fonts
         # that include Cyrillic glyphs. Helvetica does not support Bulgarian/Cyrillic text.
+        bundled_dir = os.path.join(os.path.dirname(__file__), 'fonts')
         font_candidates = {
+            'DejaVuSans': [
+                os.path.join(bundled_dir, 'DejaVuSans.ttf'),
+            ],
+            'DejaVuSans-Bold': [
+                os.path.join(bundled_dir, 'DejaVuSans-Bold.ttf'),
+            ],
             'Arial': [
                 'C:/Windows/Fonts/arial.ttf',
                 'C:/Windows/Fonts/arial.ttf',
@@ -61,14 +68,6 @@ class InvoiceService:
                 'C:/Windows/Fonts/arialbd.ttf',
                 'C:/Windows/Fonts/arialbd.ttf',
                 'C:/Windows/Fonts/calibrib.ttf',
-            ],
-            'DejaVuSans': [
-                '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf',
-                '/usr/local/share/fonts/DejaVuSans.ttf',
-            ],
-            'DejaVuSans-Bold': [
-                '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf',
-                '/usr/local/share/fonts/DejaVuSans-Bold.ttf',
             ],
         }
 
