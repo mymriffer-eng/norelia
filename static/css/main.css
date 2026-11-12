@@ -6,6 +6,9 @@
     --gold-accent: #D4AF37;
     --text-dark: #333;
     --text-muted: #6c757d;
+    /* Rose gold with metallic highlights, sampled from the logo lettering */
+    --rose-gold-gradient: linear-gradient(110deg, #8a5648 0%, #c48b79 22%, #f0c4b2 40%, #b57a68 58%, #e3ab98 78%, #8a5648 100%);
+    --rose-gold-solid: #b57a68;
 }
 
 body {
@@ -28,9 +31,14 @@ body {
     letter-spacing: 1px;
 }
 
-/* Header brand: rose gold, matching the logo lettering */
+/* Header brand: rose gold with highlights, matching the logo lettering */
 .navbar .brand-name {
-    color: #9B6F60;
+    background: var(--rose-gold-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--rose-gold-solid);
+    filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.6));
 }
 
 /* Navbar */
@@ -141,28 +149,42 @@ body {
 /* Footer */
 .footer {
     border-top: 1px solid #e0e0e0;
-    color: #9B6F60;
+    color: var(--rose-gold-solid);
 }
 
 .footer h5,
+.footer p,
 .footer .brand-name {
-    color: #9B6F60;
+    width: fit-content;
+    max-width: 100%;
     font-weight: 600;
+    background: var(--rose-gold-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: var(--rose-gold-solid) !important;
 }
 
-.footer .text-muted,
-.footer p,
+.footer .text-center {
+    display: flex;
+    justify-content: center;
+}
+
+.footer p {
+    font-weight: 500;
+}
+
 .footer i {
-    color: #9B6F60 !important;
+    -webkit-text-fill-color: var(--rose-gold-solid);
 }
 
 .footer a {
-    color: #9B6F60;
+    color: var(--rose-gold-solid);
     transition: color 0.3s;
 }
 
 .footer a:hover {
-    color: #7d5649;
+    color: #8a5648;
 }
 
 /* Badges */
