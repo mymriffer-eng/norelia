@@ -71,10 +71,45 @@ class OrderService:
         
         return order
     
+    @staticmethod
+    def sync_inventory(order, previous_status=None):
+        """
+        Keep stock in line with the order status (idempotent):
+        - confirmed/shipped/delivered: subtract the items from stock once
+        - cancelled: put items back if already subtracted, otherwise release the reservation
+        """
+        from apps.inventory.models import StockMovement
+        
+        reference = f'Order #{order.order_number}'
+        movements = StockMovement.objects.filter(reference=reference)
+        deducted = movements.filter(movement_type='sale').count() > movements.filter(movement_type='return').count()
+        
+        if order.status in ('confirmed', 'shipped', 'delivered'):
+            if not deducted:
+                for item in order.items.select_related('product'):
+                    InventoryService.confirm_sale(
+                        product=item.product,
+                        quantity=item.quantity,
+                        reference=reference
+                    )
+        elif order.status == 'cancelled':
+            if deducted:
+                for item in order.items.select_related('product'):
+                    InventoryService.adjust_stock(
+                        item.product,
+                        item.quantity,
+                        movement_type='return',
+                        reference=reference,
+                        notes='Order cancelled'
+                    )
+            elif previous_status == 'new':
+                for item in order.items.select_related('product'):
+                    InventoryService.release_reserved_stock(item.product, item.quantity)
+    
     @transaction.atomic
     def confirm_order(self, order):
         """
-        Confirm order and update inventory
+        Confirm order (stock is updated by the order status signal)
         """
         if order.status != 'new':
             return False
@@ -82,14 +117,6 @@ class OrderService:
         # Update order status
         order.status = 'confirmed'
         order.save()
-        
-        # Update inventory for each item
-        for item in order.items.all():
-            InventoryService.confirm_sale(
-                product=item.product,
-                quantity=item.quantity,
-                reference=f'Order #{order.order_number}'
-            )
         
         # Generate invoice
         from apps.invoices.services import InvoiceService
@@ -101,7 +128,7 @@ class OrderService:
     @transaction.atomic
     def cancel_order(self, order):
         """
-        Cancel order and release reserved stock
+        Cancel order (stock is updated by the order status signal)
         """
         if order.status in ['delivered', 'cancelled']:
             return False
@@ -109,12 +136,6 @@ class OrderService:
         # Update order status
         order.status = 'cancelled'
         order.save()
-        
-        # Release reserved stock
-        for item in order.items.all():
-            if order.status == 'new':
-                # Only release if not yet confirmed
-                InventoryService.release_reserved_stock(item.product, item.quantity)
         
         return True
     

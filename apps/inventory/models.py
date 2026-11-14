@@ -97,13 +97,17 @@ class PurchaseDelivery(models.Model):
         if self.is_received:
             raise ValidationError('Delivery already received')
         
+        self.process_receipt()
+    
+    def process_receipt(self):
+        """Add delivered quantities to stock and mark the delivery as received"""
         from django.utils import timezone
+        from .services import InventoryService
         
         # Update inventory for each item
         for item in self.items.all():
-            inventory, created = ProductInventory.objects.get_or_create(
-                product=item.product
-            )
+            # Starts from the product's current stock when there is no inventory record yet
+            inventory = InventoryService.get_or_create_inventory(item.product)
             inventory.current_quantity += item.quantity
             inventory.save()
             

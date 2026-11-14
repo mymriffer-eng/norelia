@@ -1,7 +1,11 @@
+import logging
+
 from django.db import transaction
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from .models import Order
+
+logger = logging.getLogger(__name__)
 
 
 @receiver(pre_save, sender=Order)
@@ -27,13 +31,28 @@ def send_order_emails(sender, instance, created, **kwargs):
 
 
 @receiver(post_save, sender=Order)
+def sync_inventory_on_status_change(sender, instance, created, **kwargs):
+    """Subtract/return stock when the order status changes (admin actions, edit form, services)."""
+    if created:
+        return
+    previous = getattr(instance, '_previous_status', None)
+    if previous is None or previous == instance.status:
+        return
+    from .services import OrderService
+    try:
+        OrderService.sync_inventory(instance, previous)
+    except Exception:
+        logger.exception('Inventory sync failed for order %s', instance.order_number)
+
+
+@receiver(post_save, sender=Order)
 def order_status_changed(sender, instance, created, **kwargs):
     """
     Handle order status changes
     """
     if not created:
-        # Check if status changed to confirmed
-        if instance.status == 'confirmed':
+        # Create the invoice once the order is confirmed (or moved straight to a later status)
+        if instance.status in ('confirmed', 'shipped', 'delivered'):
             # Check if invoice already exists
             if not hasattr(instance, 'invoice'):
                 # Create invoice
@@ -41,5 +60,5 @@ def order_status_changed(sender, instance, created, **kwargs):
                 invoice_service = InvoiceService()
                 try:
                     invoice_service.create_invoice_for_order(instance)
-                except Exception as e:
-                    print(f'Error creating invoice: {e}')
+                except Exception:
+                    logger.exception('Error creating invoice for order %s', instance.order_number)

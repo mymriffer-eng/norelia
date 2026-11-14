@@ -257,13 +257,42 @@ class InvoiceItem(models.Model):
     def subtotal_vat(self):
         return split_vat(self.subtotal)[1]
     
+    def _product(self, sku=None):
+        sku = self.product_sku if sku is None else sku
+        return Product.objects.filter(sku__iexact=sku).first() if sku else None
+    
+    def _sync_stock(self, old_product, old_quantity):
+        """Manual invoices (not linked to an order) subtract sold products from stock"""
+        from apps.inventory.services import InventoryService
+        reference = f'Фактура {self.invoice.invoice_number}'
+        new_product = self._product()
+        if old_product and new_product and old_product.pk == new_product.pk:
+            delta = self.quantity - old_quantity
+            if delta > 0:
+                InventoryService.adjust_stock(new_product, -delta, 'sale', reference)
+            elif delta < 0:
+                InventoryService.adjust_stock(new_product, -delta, 'return', reference)
+            return
+        if old_product:
+            InventoryService.adjust_stock(old_product, old_quantity, 'return', reference)
+        if new_product:
+            InventoryService.adjust_stock(new_product, -self.quantity, 'sale', reference)
+    
     def save(self, *args, **kwargs):
         """Calculate subtotal before saving"""
         self.fill_from_catalog()
         if self.price is None:
             self.price = Decimal('0.00')
         self.subtotal = self.price * self.quantity
+        
+        old = InvoiceItem.objects.filter(pk=self.pk).first() if self.pk else None
+        old_product = old._product() if old else None
+        old_quantity = old.quantity if old else 0
+        
         super().save(*args, **kwargs)
+        
+        if self.invoice.order_id is None:
+            self._sync_stock(old_product, old_quantity)
         
         # Update invoice subtotal
         self.invoice.update_subtotal()
@@ -271,5 +300,12 @@ class InvoiceItem(models.Model):
     def delete(self, *args, **kwargs):
         """Update invoice subtotal after deleting"""
         invoice = self.invoice
+        product = self._product() if invoice.order_id is None else None
+        quantity = self.quantity
         super().delete(*args, **kwargs)
+        if product:
+            from apps.inventory.services import InventoryService
+            InventoryService.adjust_stock(
+                product, quantity, 'return', f'Фактура {invoice.invoice_number}'
+            )
         invoice.update_subtotal()

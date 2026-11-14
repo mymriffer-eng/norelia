@@ -77,7 +77,7 @@ class PurchaseDeliveryAdmin(admin.ModelAdmin):
     ]
     list_filter = ['is_received', 'delivery_date', 'supplier']
     search_fields = ['invoice_number', 'supplier__name']
-    readonly_fields = ['is_received', 'received_at', 'created_at', 'updated_at', 'total_cost']
+    readonly_fields = ['received_at', 'created_at', 'updated_at', 'total_cost']
     inlines = [PurchaseDeliveryItemInline]
     date_hierarchy = 'delivery_date'
     
@@ -86,7 +86,8 @@ class PurchaseDeliveryAdmin(admin.ModelAdmin):
             'fields': ('supplier', 'invoice_number', 'delivery_date', 'notes')
         }),
         ('Status', {
-            'fields': ('is_received', 'received_at')
+            'fields': ('is_received', 'received_at'),
+            'description': 'Tick "Received" and save to add the delivered quantities to stock.'
         }),
         ('Summary', {
             'fields': ('total_cost',)
@@ -98,6 +99,21 @@ class PurchaseDeliveryAdmin(admin.ModelAdmin):
     )
     
     actions = ['receive_deliveries']
+    
+    def get_readonly_fields(self, request, obj=None):
+        readonly = list(super().get_readonly_fields(request, obj))
+        if obj and obj.is_received:
+            # Already received: stock was updated, do not allow changes
+            readonly.append('is_received')
+        return readonly
+    
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        delivery = form.instance
+        # Ticked as received: items are saved by now, so add them to stock once
+        if delivery.is_received and not delivery.received_at:
+            delivery.process_receipt()
+            self.message_user(request, 'Delivery received - stock updated.')
     
     def total_cost(self, obj):
         if obj.id:
