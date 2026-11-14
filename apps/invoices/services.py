@@ -1,5 +1,7 @@
 import os
+from decimal import Decimal
 from io import BytesIO
+from xml.sax.saxutils import escape
 from django.utils import timezone
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
