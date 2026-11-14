@@ -1,4 +1,5 @@
 import os
+import re
 from decimal import Decimal
 from io import BytesIO
 from xml.sax.saxutils import escape
@@ -13,6 +14,13 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from .models import Invoice, InvoiceItem, split_vat, get_vat_rate
 from apps.core.models import SiteSettings
+
+
+def _clean(value):
+    """Single-line text: line breaks/control characters render as boxes in PDF tables"""
+    text = re.sub(r'\s*[\r\n]+\s*', ', ', str(value or ''))
+    text = ''.join(ch for ch in text if ch.isprintable())
+    return text.strip(' ,')
 
 
 class InvoiceService:
@@ -180,18 +188,36 @@ class InvoiceService:
         
         # Company and invoice info
         order_number = invoice.order.order_number if invoice.order else '-'
+        number_data = [
+            ['Фактура №:', invoice.invoice_number],
+            ['Дата:', invoice.invoice_date.strftime('%d.%m.%Y')],
+            ['Поръчка №:', order_number],
+        ]
+        number_table = Table(number_data, colWidths=[3*cm, 6*cm], hAlign='LEFT')
+        number_table.setStyle(TableStyle([
+            ('FONTNAME', (0, 0), (0, -1), font_bold),
+            ('FONTNAME', (1, 0), (1, -1), font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
+        ]))
+        elements.append(number_table)
+        elements.append(Spacer(1, 0.6*cm))
+        
         info_data = [
-            ['Издател:', company_name, 'Фактура №:', invoice.invoice_number],
-            ['ЕИК:', company_vat, 'Дата:', invoice.invoice_date.strftime('%d.%m.%Y')],
-            ['Адрес:', company_address, 'Поръчка №:', order_number],
+            ['Издател:', _clean(company_name)],
+            ['ЕИК:', _clean(company_vat)],
+            ['Адрес:', _clean(company_address)],
         ]
         
-        info_table = Table(info_data, colWidths=[3*cm, 6*cm, 3*cm, 5*cm])
+        value_style = ParagraphStyle(
+            'InfoValue', parent=styles['Normal'], fontName=font_name, fontSize=10, leading=12
+        )
+        info_data = [[k, Paragraph(escape(v), value_style)] for k, v in info_data]
+        
+        info_table = Table(info_data, colWidths=[3*cm, 14*cm], hAlign='LEFT')
         info_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), font_bold),
-            ('FONTNAME', (2, 0), (2, -1), font_bold),
             ('FONTNAME', (1, 0), (1, -1), font_name),
-            ('FONTNAME', (3, 0), (3, -1), font_name),
             ('FONTSIZE', (0, 0), (-1, -1), 10),
             ('VALIGN', (0, 0), (-1, -1), 'TOP'),
         ]))
@@ -202,24 +228,25 @@ class InvoiceService:
         if invoice.is_company:
             elements.append(Paragraph("<b>Фирмени данни:</b>", styles['Heading3']))
             customer_data = [
-                ['Фирма:', invoice.customer_name],
-                ['ЕИК/Булстат:', invoice.company_vat or '-'],
-                ['ДДС номер:', invoice.company_vat_number or '-'],
-                ['МОЛ:', invoice.company_mol or '-'],
-                ['Телефон:', invoice.customer_phone],
-                ['Имейл:', invoice.customer_email or '-'],
-                ['Адрес:', invoice.customer_address],
+                ['Фирма:', _clean(invoice.customer_name)],
+                ['ЕИК/Булстат:', _clean(invoice.company_vat) or '-'],
+                ['ДДС номер:', _clean(invoice.company_vat_number) or '-'],
+                ['МОЛ:', _clean(invoice.company_mol) or '-'],
+                ['Телефон:', _clean(invoice.customer_phone)],
+                ['Имейл:', _clean(invoice.customer_email) or '-'],
+                ['Адрес:', _clean(invoice.customer_address)],
             ]
         else:
             elements.append(Paragraph("<b>Клиент:</b>", styles['Heading3']))
             customer_data = [
-                ['Име:', invoice.customer_name],
-                ['Телефон:', invoice.customer_phone],
-                ['Имейл:', invoice.customer_email or '-'],
-                ['Адрес:', invoice.customer_address],
+                ['Име:', _clean(invoice.customer_name)],
+                ['Телефон:', _clean(invoice.customer_phone)],
+                ['Имейл:', _clean(invoice.customer_email) or '-'],
+                ['Адрес:', _clean(invoice.customer_address)],
             ]
         
-        customer_table = Table(customer_data, colWidths=[3*cm, 14*cm])
+        customer_data = [[k, Paragraph(escape(v), value_style)] for k, v in customer_data]
+        customer_table = Table(customer_data, colWidths=[3*cm, 14*cm], hAlign='LEFT')
         customer_table.setStyle(TableStyle([
             ('FONTNAME', (0, 0), (0, -1), font_bold),
             ('FONTNAME', (1, 0), (1, -1), font_name),
