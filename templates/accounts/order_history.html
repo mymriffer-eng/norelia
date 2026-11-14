@@ -39,12 +39,12 @@
                                 <h6>Продукти:</h6>
                                 <ul class="list-unstyled">
                                     {% for item in order.items.all %}
-                                    <li>{{ item.product_name }} x{{ item.quantity }} - {{ item.subtotal }} лв.</li>
+                                    <li>{{ item.product_name }} x{{ item.quantity }} - {{ item.subtotal }} €</li>
                                     {% endfor %}
                                 </ul>
                             </div>
                             <div class="col-md-4 text-end">
-                                <h5 class="text-primary">{{ order.total }} лв.</h5>
+                                <h5 class="text-primary">{{ order.total }} €</h5>
                                 <a href="{% url 'accounts:order_detail' order.order_number %}" class="btn btn-sm btn-outline-primary">
                                     Виж детайли <i class="bi bi-arrow-right"></i>
                                 </a>

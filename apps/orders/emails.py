@@ -25,7 +25,7 @@ def _order_url(order):
 def _items_text(order):
     lines = []
     for item in order.items.all():
-        lines.append(f'- {item.product_name} x {item.quantity} = {item.subtotal} лв.')
+        lines.append(f'- {item.product_name} x {item.quantity} = {item.subtotal} €')
     return '\n'.join(lines)
 
 
@@ -36,9 +36,9 @@ def _send(order, subject, intro):
         f'Номер на поръчка: {order.order_number}\n'
         f'Статус: {order.get_status_display()}\n\n'
         f'Продукти:\n{_items_text(order)}\n\n'
-        f'Междинна сума: {order.subtotal} лв.\n'
+        f'Междинна сума: {order.subtotal} €\n'
         f'Доставка: {SHIPPING_TEXT}\n'
-        f'Обща сума: {order.total} лв.\n'
+        f'Обща сума: {order.total} €\n'
         f'Начин на плащане: {order.get_payment_method_display()}\n\n'
         f'Адрес за доставка: {order.city}, {order.address}\n'
         f'Телефон: {order.phone}\n\n'

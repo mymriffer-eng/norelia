@@ -102,7 +102,7 @@ class OrderAdmin(admin.ModelAdmin):
     
     def total_display(self, obj):
         return format_html(
-            '<strong>{} лв.</strong>',
+            '<strong>{} €</strong>',
             obj.total
         )
     total_display.short_description = 'Total'

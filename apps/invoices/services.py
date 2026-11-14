@@ -9,7 +9,7 @@ from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, 
 from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
-from .models import Invoice
+from .models import Invoice, InvoiceItem, split_vat, get_vat_rate
 from apps.core.models import SiteSettings
 
 
@@ -42,7 +42,46 @@ class InvoiceService:
             notes=order.notes
         )
         
+        # Copy ordered products into invoice lines (prices are VAT-inclusive)
+        InvoiceItem.objects.bulk_create([
+            InvoiceItem(
+                invoice=invoice,
+                product_sku=item.product_sku,
+                product_name=item.product_name,
+                quantity=item.quantity,
+                price=item.price,
+                subtotal=item.subtotal,
+            )
+            for item in order.items.all()
+        ])
+        
         return invoice
+    
+    @staticmethod
+    def get_lines(invoice):
+        """Invoice lines; falls back to the order items for older invoices without lines"""
+        lines = [
+            {
+                'sku': item.product_sku,
+                'name': item.product_name,
+                'quantity': item.quantity,
+                'price': item.price,
+                'subtotal': item.subtotal,
+            }
+            for item in invoice.items.all()
+        ]
+        if not lines and invoice.order:
+            lines = [
+                {
+                    'sku': item.product_sku,
+                    'name': item.product_name,
+                    'quantity': item.quantity,
+                    'price': item.price,
+                    'subtotal': item.subtotal,
+                }
+                for item in invoice.order.items.all()
+            ]
+        return lines
     
     def generate_pdf(self, invoice):
         """Generate PDF for invoice using ReportLab"""
@@ -188,97 +227,111 @@ class InvoiceService:
         elements.append(customer_table)
         elements.append(Spacer(1, 1*cm))
         
-        # Items table - check if invoice has items (manual or from order)
-        invoice_items = invoice.items.all()
+        # Items table (prices shown without and with VAT)
+        lines = self.get_lines(invoice)
+        vat_percent = (get_vat_rate() * 100).quantize(Decimal('0.01')).normalize()
+        vat_percent_text = f'{vat_percent:f}'
         
-        if invoice_items.exists():
-            elements.append(Paragraph("<b>Поръчани артикули:</b>", styles['Heading3']))
+        if lines:
+            elements.append(Paragraph("<b>Артикули:</b>", styles['Heading3']))
             elements.append(Spacer(1, 0.3*cm))
             
-            # Table header
-            items_data = [['№', 'Артикул', 'SKU', 'Кол.', 'Цена (лв.)', 'Сума (лв.)']]
+            cell_style = ParagraphStyle(
+                'ItemCell',
+                parent=styles['Normal'],
+                fontName=font_name,
+                fontSize=8,
+                leading=10,
+            )
+            head_style = ParagraphStyle(
+                'ItemHead',
+                parent=cell_style,
+                fontName=font_bold,
+                textColor=colors.white,
+                alignment=TA_CENTER,
+            )
             
-            # Add items from invoice items
-            for idx, item in enumerate(invoice_items, 1):
+            items_data = [[
+                Paragraph('№', head_style),
+                Paragraph('Код', head_style),
+                Paragraph('Наименование', head_style),
+                Paragraph('Кол.', head_style),
+                Paragraph('Ед. цена без ДДС', head_style),
+                Paragraph('Ед. цена с ДДС', head_style),
+                Paragraph('Сума без ДДС', head_style),
+                Paragraph('Сума с ДДС', head_style),
+            ]]
+            
+            for idx, line in enumerate(lines, 1):
+                unit_net, _ = split_vat(line['price'])
+                line_net, _ = split_vat(line['subtotal'])
                 items_data.append([
                     str(idx),
-                    item.product_name,
-                    item.product_sku or '-',
-                    str(item.quantity),
-                    f'{item.price:.2f}',
-                    f'{item.subtotal:.2f}'
+                    line['sku'] or '-',
+                    Paragraph(escape(line['name']), cell_style),
+                    str(line['quantity']),
+                    f'{unit_net:.2f}',
+                    f'{line["price"]:.2f}',
+                    f'{line_net:.2f}',
+                    f'{line["subtotal"]:.2f}',
                 ])
             
-            # Add totals with discount if applicable
-            items_data.append(['', '', '', '', 'Междинна сума:', f'{invoice.subtotal:.2f}'])
-            
-            if invoice.trade_discount_percent > 0:
-                items_data.append(['', '', '', '', f'Търговска отстъпка ({invoice.trade_discount_percent}%):', f'-{invoice.trade_discount_amount:.2f}'])
-                items_data.append(['', '', '', '', 'След отстъпка:', f'{invoice.subtotal_after_discount:.2f}'])
-            
-            items_data.append(['Доставка: според тарифата на куриера', '', '', '', '', ''])
-            items_data.append(['', '', '', '', 'ОБЩО:', f'{invoice.total:.2f}'])
-            
-            items_table = Table(items_data, colWidths=[1*cm, 7*cm, 3*cm, 1.5*cm, 2.5*cm, 2*cm])
+            items_table = Table(
+                items_data,
+                colWidths=[0.8*cm, 2.3*cm, 5.1*cm, 1.2*cm, 1.9*cm, 1.9*cm, 1.9*cm, 1.9*cm],
+                repeatRows=1,
+            )
             items_table.setStyle(TableStyle([
-                # Header
                 ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#C59D5F')),
-                ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
-                ('FONTNAME', (0, 0), (-1, 0), font_bold),
-                ('FONTSIZE', (0, 0), (-1, 0), 10),
-                ('ALIGN', (0, 0), (-1, 0), 'CENTER'),
-                
-                # Body
-                ('FONTNAME', (0, 1), (-1, -4), font_name),
-                ('FONTSIZE', (0, 1), (-1, -4), 9),
-                ('ALIGN', (3, 1), (3, -4), 'CENTER'),
-                ('ALIGN', (4, 1), (-1, -4), 'RIGHT'),
-                
-                # Totals
-                ('FONTNAME', (4, -3), (-1, -1), font_bold),
-                ('ALIGN', (4, -3), (-1, -1), 'RIGHT'),
-                
-                # Shipping row: text spans the whole row
-                ('SPAN', (0, -2), (-1, -2)),
-                ('FONTNAME', (0, -2), (0, -2), font_bold),
-                ('FONTSIZE', (0, -2), (0, -2), 9),
-                ('ALIGN', (0, -2), (0, -2), 'RIGHT'),
-                
-                # Grand total
-                ('FONTSIZE', (4, -1), (-1, -1), 12),
-                ('BACKGROUND', (4, -1), (-1, -1), colors.HexColor('#F5F5F5')),
-                
-                # Grid
-                ('GRID', (0, 0), (-1, -4), 1, colors.grey),
-                ('LINEABOVE', (4, -3), (-1, -1), 1, colors.grey),
-                ('BOX', (0, 0), (-1, -1), 2, colors.black),
+                ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+                ('FONTNAME', (0, 1), (-1, -1), font_name),
+                ('FONTSIZE', (0, 1), (-1, -1), 8),
+                ('ALIGN', (0, 1), (1, -1), 'CENTER'),
+                ('ALIGN', (3, 1), (3, -1), 'CENTER'),
+                ('ALIGN', (4, 1), (-1, -1), 'RIGHT'),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.grey),
+                ('BOX', (0, 0), (-1, -1), 1.5, colors.black),
             ]))
             elements.append(items_table)
-            elements.append(Spacer(1, 1*cm))
+            elements.append(Spacer(1, 0.5*cm))
+        
+        # Totals
+        total_net, total_vat = split_vat(invoice.total)
+        totals = []  # (label, value, style)
+        
+        if invoice.trade_discount_percent > 0:
+            totals.append(('Сума с ДДС:', f'{invoice.subtotal:.2f} €', 'normal'))
+            totals.append((f'Търговска отстъпка ({invoice.trade_discount_percent}%):', f'-{invoice.trade_discount_amount:.2f} €', 'normal'))
+            totals.append(('Сума след отстъпка:', f'{invoice.subtotal_after_discount:.2f} €', 'normal'))
+        
+        if invoice.shipping_cost and invoice.shipping_cost > 0:
+            totals.append(('Доставка:', f'{invoice.shipping_cost:.2f} €', 'normal'))
         else:
-            # For manual invoices without order, just show the total
-            elements.append(Paragraph("<b>Сума за плащане:</b>", styles['Heading3']))
-            elements.append(Spacer(1, 0.3*cm))
-            
-            total_data = [
-                ['Междинна сума:', f'{invoice.subtotal:.2f} лв.'],
-                ['Доставка:', f'{invoice.shipping_cost:.2f} лв.'],
-                ['ОБЩО:', f'{invoice.total:.2f} лв.'],
-            ]
-            
-            total_table = Table(total_data, colWidths=[14*cm, 3*cm])
-            total_table.setStyle(TableStyle([
-                ('FONTNAME', (0, 0), (-1, -1), font_bold),
-                ('FONTSIZE', (0, 0), (-1, -1), 11),
-                ('ALIGN', (1, 0), (1, -1), 'RIGHT'),
-                ('FONTSIZE', (0, -1), (-1, -1), 14),
-                ('BACKGROUND', (0, -1), (-1, -1), colors.HexColor('#F5F5F5')),
-                ('BOX', (0, 0), (-1, -1), 2, colors.black),
-                ('LINEABOVE', (0, -1), (-1, -1), 2, colors.black),
-            ]))
-            elements.append(total_table)
-            elements.append(Spacer(1, 1*cm))
-
+            totals.append(('Доставка: според тарифата на куриера', '', 'normal'))
+        
+        totals.append(('Данъчна основа (без ДДС):', f'{total_net:.2f} €', 'bold'))
+        totals.append((f'ДДС {vat_percent_text}%:', f'{total_vat:.2f} €', 'bold'))
+        totals.append(('ОБЩО за плащане (с ДДС):', f'{invoice.total:.2f} €', 'grand'))
+        
+        total_table = Table([[label, value] for label, value, _ in totals], colWidths=[13*cm, 4*cm])
+        total_style = [
+            ('FONTNAME', (0, 0), (-1, -1), font_name),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('ALIGN', (0, 0), (-1, -1), 'RIGHT'),
+            ('TOPPADDING', (0, 0), (-1, -1), 3),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 3),
+        ]
+        for row, (_, _, kind) in enumerate(totals):
+            if kind in ('bold', 'grand'):
+                total_style.append(('FONTNAME', (0, row), (-1, row), font_bold))
+            if kind == 'grand':
+                total_style.append(('FONTSIZE', (0, row), (-1, row), 12))
+                total_style.append(('BACKGROUND', (0, row), (-1, row), colors.HexColor('#F5F5F5')))
+                total_style.append(('LINEABOVE', (0, row), (-1, row), 1, colors.black))
+        total_style.append(('BOX', (0, 0), (-1, -1), 1.5, colors.black))
+        total_table.setStyle(TableStyle(total_style))
+        elements.append(total_table)
+        elements.append(Spacer(1, 1*cm))
         
         # Payment info
         elements.append(Paragraph("<b>Начин на плащане:</b> Наложен платеж", styles['Normal']))

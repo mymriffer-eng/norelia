@@ -36,14 +36,14 @@
                                 <tr>
                                     <td>{{ item.product_name }}</td>
                                     <td>{{ item.product_sku }}</td>
-                                    <td>{{ item.price }} лв.</td>
+                                    <td>{{ item.price }} €</td>
                                     <td>{{ item.quantity }}</td>
-                                    <td>{{ item.subtotal }} лв.</td>
+                                    <td>{{ item.subtotal }} €</td>
                                 </tr>
                                 {% endfor %}
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>Междинна сума:</strong></td>
-                                    <td><strong>{{ order.subtotal }} лв.</strong></td>
+                                    <td><strong>{{ order.subtotal }} €</strong></td>
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>Доставка:</strong></td>
@@ -51,7 +51,7 @@
                                 </tr>
                                 <tr class="table-primary">
                                     <td colspan="4" class="text-end"><strong>ОБЩО:</strong></td>
-                                    <td><strong class="fs-5">{{ order.total }} лв.</strong></td>
+                                    <td><strong class="fs-5">{{ order.total }} €</strong></td>
                                 </tr>
                             </tbody>
                         </table>

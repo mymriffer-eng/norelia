@@ -17,7 +17,7 @@
     
     <div class="col-md-3">
         <div class="card" style="padding: 20px; background: #e8f5e9;">
-            <h3 style="margin: 0; color: #388e3c;">{{ revenue_today|floatformat:2 }} лв.</h3>
+            <h3 style="margin: 0; color: #388e3c;">{{ revenue_today|floatformat:2 }} €</h3>
             <p style="margin: 5px 0 0 0; color: #666;">Оборот днес</p>
         </div>
     </div>
@@ -31,7 +31,7 @@
     
     <div class="col-md-3">
         <div class="card" style="padding: 20px; background: #f3e5f5;">
-            <h3 style="margin: 0; color: #7b1fa2;">{{ revenue_month|floatformat:2 }} лв.</h3>
+            <h3 style="margin: 0; color: #7b1fa2;">{{ revenue_month|floatformat:2 }} €</h3>
             <p style="margin: 5px 0 0 0; color: #666;">Оборот за месеца</p>
         </div>
     </div>
@@ -61,7 +61,7 @@
                             </a>
                         </td>
                         <td>{{ order.get_full_name }}</td>
-                        <td>{{ order.total }} лв.</td>
+                        <td>{{ order.total }} €</td>
                         <td>
                             <span class="badge" style="background: 
                                 {% if order.status == 'new' %}#17a2b8

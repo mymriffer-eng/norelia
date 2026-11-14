@@ -59,7 +59,7 @@ class PurchaseDeliveryItemInline(admin.TabularInline):
     
     def total_display(self, obj):
         if obj.id:
-            return f'{obj.get_total()} лв.'
+            return f'{obj.get_total()} €'
         return '-'
     total_display.short_description = 'Total'
 
@@ -101,7 +101,7 @@ class PurchaseDeliveryAdmin(admin.ModelAdmin):
     
     def total_cost(self, obj):
         if obj.id:
-            return f'{obj.get_total_cost()} лв.'
+            return f'{obj.get_total_cost()} €'
         return '-'
     total_cost.short_description = 'Total Cost'
     

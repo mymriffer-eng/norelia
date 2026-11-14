@@ -1,5 +1,24 @@
+from decimal import Decimal, ROUND_HALF_UP
+
+from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from apps.orders.models import Order
+from apps.shop.models import Product
+
+CENT = Decimal('0.01')
+
+
+def get_vat_rate():
+    """VAT rate as Decimal, e.g. Decimal('0.20')"""
+    return Decimal(str(getattr(settings, 'VAT_RATE', '0.20')))
+
+
+def split_vat(gross):
+    """Split a gross (VAT included) amount into (net, vat)."""
+    gross = Decimal(gross or 0)
+    net = (gross / (1 + get_vat_rate())).quantize(CENT, rounding=ROUND_HALF_UP)
+    return net, gross - net
 
 
 class Invoice(models.Model):
@@ -33,7 +52,7 @@ class Invoice(models.Model):
     company_mol = models.CharField(max_length=200, blank=True, verbose_name='МОЛ', help_text='Материално отговорно лице')
     
     # Invoice amounts
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Междинна сума')
+    subtotal = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Междинна сума (с ДДС)')
     trade_discount_percent = models.DecimalField(
         max_digits=5, 
         decimal_places=2, 
@@ -45,7 +64,7 @@ class Invoice(models.Model):
         max_digits=10, 
         decimal_places=2, 
         default=0, 
-        verbose_name='Сума отстъпка (лв.)'
+        verbose_name='Сума отстъпка (€)'
     )
     subtotal_after_discount = models.DecimalField(
         max_digits=10, 
@@ -54,7 +73,7 @@ class Invoice(models.Model):
         verbose_name='Сума след отстъпка'
     )
     shipping_cost = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Доставка')
-    total = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Обща сума')
+    total = models.DecimalField(max_digits=10, decimal_places=2, default=0, verbose_name='Обща сума (с ДДС)')
     
     # Notes
     notes = models.TextField(blank=True, verbose_name='Бележки')
@@ -74,10 +93,20 @@ class Invoice(models.Model):
     def __str__(self):
         return f'Фактура {self.invoice_number}'
     
+    @property
+    def total_net(self):
+        """Total without VAT"""
+        return split_vat(self.total)[0]
+    
+    @property
+    def total_vat(self):
+        """VAT amount included in the total"""
+        return split_vat(self.total)[1]
+    
     def calculate_discount(self):
         """Calculate trade discount amount"""
         if self.trade_discount_percent > 0:
-            self.trade_discount_amount = (self.subtotal * self.trade_discount_percent) / 100
+            self.trade_discount_amount = ((self.subtotal * self.trade_discount_percent) / 100).quantize(CENT)
             self.subtotal_after_discount = self.subtotal - self.trade_discount_amount
         else:
             self.trade_discount_amount = 0
@@ -132,8 +161,39 @@ class Invoice(models.Model):
         return f'{prefix}-{next_number:06d}'
 
 
+class CatalogService(models.Model):
+    """Services (or other non-stock items) that can be added to invoices by code"""
+    
+    code = models.CharField(max_length=50, unique=True, verbose_name='Код')
+    name = models.CharField(max_length=200, verbose_name='Наименование')
+    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена с ДДС (€)')
+    is_active = models.BooleanField(default=True, verbose_name='Активна')
+    
+    class Meta:
+        verbose_name = 'Услуга'
+        verbose_name_plural = 'Услуги'
+        ordering = ['code']
+    
+    def __str__(self):
+        return f'{self.code} - {self.name}'
+
+
+def lookup_catalog_item(code):
+    """Find a product (by SKU) or a service (by code). Returns (name, gross_price) or None."""
+    code = (code or '').strip()
+    if not code:
+        return None
+    product = Product.objects.filter(sku__iexact=code).first()
+    if product:
+        return product.name, product.price
+    service = CatalogService.objects.filter(code__iexact=code, is_active=True).first()
+    if service:
+        return service.name, service.price
+    return None
+
+
 class InvoiceItem(models.Model):
-    """Items in invoice - for manual invoicing"""
+    """Items in invoice. Prices are entered/stored with VAT included."""
     
     invoice = models.ForeignKey(
         Invoice,
@@ -142,11 +202,20 @@ class InvoiceItem(models.Model):
         verbose_name='Фактура'
     )
     
-    product_name = models.CharField(max_length=200, verbose_name='Име на продукт')
-    product_sku = models.CharField(max_length=50, blank=True, verbose_name='SKU')
+    product_sku = models.CharField(
+        max_length=50, blank=True, verbose_name='Код',
+        help_text='Код на продукт (SKU) или услуга - попълва наименованието и цената автоматично'
+    )
+    product_name = models.CharField(max_length=200, blank=True, verbose_name='Наименование')
     quantity = models.PositiveIntegerField(default=1, verbose_name='Количество')
-    price = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Цена (лв.)')
-    subtotal = models.DecimalField(max_digits=10, decimal_places=2, verbose_name='Сума (лв.)', editable=False)
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True,
+        verbose_name='Ед. цена с ДДС (€)'
+    )
+    subtotal = models.DecimalField(
+        max_digits=10, decimal_places=2, default=0,
+        verbose_name='Сума с ДДС (€)', editable=False
+    )
     
     created_at = models.DateTimeField(auto_now_add=True)
     
@@ -158,8 +227,41 @@ class InvoiceItem(models.Model):
     def __str__(self):
         return f'{self.product_name} x {self.quantity}'
     
+    def fill_from_catalog(self):
+        """Fill empty name/price from product or service matching the code"""
+        found = lookup_catalog_item(self.product_sku)
+        if found:
+            name, price = found
+            if not self.product_name:
+                self.product_name = name
+            if self.price is None:
+                self.price = price
+        return found
+    
+    def clean(self):
+        self.fill_from_catalog()
+        if not self.product_name:
+            raise ValidationError('Въведете код на продукт/услуга или наименование.')
+        if self.price is None:
+            raise ValidationError('Въведете цена или валиден код на продукт/услуга.')
+    
+    @property
+    def unit_price_net(self):
+        return split_vat(self.price)[0]
+    
+    @property
+    def subtotal_net(self):
+        return split_vat(self.subtotal)[0]
+    
+    @property
+    def subtotal_vat(self):
+        return split_vat(self.subtotal)[1]
+    
     def save(self, *args, **kwargs):
         """Calculate subtotal before saving"""
+        self.fill_from_catalog()
+        if self.price is None:
+            self.price = Decimal('0.00')
         self.subtotal = self.price * self.quantity
         super().save(*args, **kwargs)
         

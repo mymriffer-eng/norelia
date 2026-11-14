@@ -62,13 +62,13 @@
             <!-- Price -->
             <div class="mb-4">
                 {% if product.old_price %}
-                    <h3 class="text-danger mb-0">{{ product.price }} лв.</h3>
+                    <h3 class="text-danger mb-0">{{ product.price }} €</h3>
                     <p class="text-muted">
-                        <span class="text-decoration-line-through">{{ product.old_price }} лв.</span>
+                        <span class="text-decoration-line-through">{{ product.old_price }} €</span>
                         <span class="badge bg-danger ms-2">-{{ product.old_price|discount_percentage:product.price }}%</span>
                     </p>
                 {% else %}
-                    <h3 class="mb-0">{{ product.price }} лв.</h3>
+                    <h3 class="mb-0">{{ product.price }} €</h3>
                 {% endif %}
             </div>
             

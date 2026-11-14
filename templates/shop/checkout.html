@@ -100,7 +100,7 @@
                     {% for item in cart_items %}
                     <div class="d-flex justify-content-between mb-2">
                         <span>{{ item.product.name }} x{{ item.quantity }}</span>
-                        <span>{{ item.subtotal }} лв.</span>
+                        <span>{{ item.subtotal }} €</span>
                     </div>
                     {% endfor %}
                     
@@ -108,7 +108,7 @@
                     
                     <div class="d-flex justify-content-between mb-2">
                         <span>Междинна сума:</span>
-                        <strong>{{ total }} лв.</strong>
+                        <strong>{{ total }} €</strong>
                     </div>
                     
                     <div class="d-flex justify-content-between mb-3">
@@ -120,7 +120,7 @@
                     
                     <div class="d-flex justify-content-between">
                         <strong>Обща сума:</strong>
-                        <strong class="text-primary fs-4">{{ total }} лв.</strong>
+                        <strong class="text-primary fs-4">{{ total }} €</strong>
                     </div>
                 </div>
             </div>

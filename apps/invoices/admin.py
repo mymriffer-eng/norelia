@@ -2,23 +2,48 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from django.urls import reverse, path
-from django.http import HttpResponse
-from .models import Invoice, InvoiceItem
+from django.http import HttpResponse, JsonResponse
+from .models import Invoice, InvoiceItem, CatalogService, lookup_catalog_item
 from .services import InvoiceService
 
 
 class InvoiceItemInline(admin.TabularInline):
     model = InvoiceItem
-    extra = 1
-    fields = ['product_name', 'product_sku', 'quantity', 'price', 'subtotal']
-    readonly_fields = ['subtotal']
+    extra = 3
+    fields = [
+        'product_sku', 'product_name', 'quantity', 'price',
+        'unit_price_net_display', 'subtotal_net_display', 'subtotal',
+    ]
+    readonly_fields = ['unit_price_net_display', 'subtotal_net_display', 'subtotal']
     verbose_name = 'Артикул'
-    verbose_name_plural = 'Артикули'
+    verbose_name_plural = 'Артикули (въведете код на продукт или услуга и наименованието и цената се попълват сами)'
+    
+    def unit_price_net_display(self, obj):
+        if obj.pk and obj.price is not None:
+            return f'{obj.unit_price_net:.2f} €'
+        return '-'
+    unit_price_net_display.short_description = 'Ед. цена без ДДС (€)'
+    
+    def subtotal_net_display(self, obj):
+        if obj.pk:
+            return f'{obj.subtotal_net:.2f} €'
+        return '-'
+    subtotal_net_display.short_description = 'Сума без ДДС (€)'
+
+
+@admin.register(CatalogService)
+class CatalogServiceAdmin(admin.ModelAdmin):
+    list_display = ['code', 'name', 'price', 'is_active']
+    list_filter = ['is_active']
+    search_fields = ['code', 'name']
 
 
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     inlines = [InvoiceItemInline]
+    
+    class Media:
+        js = ('js/invoice_admin.js',)
     
     list_display = [
         'invoice_number',
@@ -40,9 +65,12 @@ class InvoiceAdmin(admin.ModelAdmin):
         'order__order_number'
     ]
     readonly_fields = [
+        'subtotal',
         'trade_discount_amount',
         'subtotal_after_discount',
         'total',
+        'total_net_display',
+        'total_vat_display',
         'created_at',
         'updated_at'
     ]
@@ -68,13 +96,15 @@ class InvoiceAdmin(admin.ModelAdmin):
             'classes': ('collapse',),
             'description': 'Попълнете само за фирмени клиенти'
         }),
-        ('Суми', {
+        ('Суми (се пресмятат автоматично след запазване)', {
             'fields': (
                 'subtotal', 
                 'trade_discount_percent',
                 'trade_discount_amount',
                 'subtotal_after_discount',
                 'shipping_cost', 
+                'total_net_display',
+                'total_vat_display',
                 'total'
             )
         }),
@@ -112,7 +142,7 @@ class InvoiceAdmin(admin.ModelAdmin):
     def discount_display(self, obj):
         if obj.trade_discount_percent > 0:
             return format_html(
-                '<span style="color: #28a745; font-weight: bold;">{}% (-{} лв.)</span>',
+                '<span style="color: #28a745; font-weight: bold;">{}% (-{} €)</span>',
                 obj.trade_discount_percent,
                 obj.trade_discount_amount
             )
@@ -120,8 +150,16 @@ class InvoiceAdmin(admin.ModelAdmin):
     discount_display.short_description = 'Отстъпка'
     
     def total_display(self, obj):
-        return format_html('<strong>{} лв.</strong>', obj.total)
+        return format_html('<strong>{} €</strong>', obj.total)
     total_display.short_description = 'Обща сума'
+    
+    def total_net_display(self, obj):
+        return f'{obj.total_net:.2f} €' if obj.pk else '-'
+    total_net_display.short_description = 'Данъчна основа (без ДДС)'
+    
+    def total_vat_display(self, obj):
+        return f'{obj.total_vat:.2f} €' if obj.pk else '-'
+    total_vat_display.short_description = 'ДДС'
     
     def actions_column(self, obj):
         return format_html(
@@ -134,12 +172,25 @@ class InvoiceAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path(
+                'lookup-item/',
+                self.admin_site.admin_view(self.lookup_item),
+                name='invoice_lookup_item'
+            ),
+            path(
                 '<int:invoice_id>/download-pdf/',
                 self.admin_site.admin_view(self.download_pdf),
                 name='download_invoice_pdf'
             ),
         ]
         return custom_urls + urls
+    
+    def lookup_item(self, request):
+        """Return product/service name and price (with VAT) for a code"""
+        found = lookup_catalog_item(request.GET.get('code', ''))
+        if not found:
+            return JsonResponse({'found': False})
+        name, price = found
+        return JsonResponse({'found': True, 'name': name, 'price': f'{price:.2f}'})
     
     def download_pdf(self, request, invoice_id):
         """Download invoice as PDF"""

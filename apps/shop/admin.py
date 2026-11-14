@@ -105,11 +105,11 @@ class ProductAdmin(admin.ModelAdmin):
     def price_display(self, obj):
         if obj.old_price:
             return format_html(
-                '<span style="color: red; font-weight: bold;">{} лв.</span> '
-                '<span style="text-decoration: line-through;">{} лв.</span>',
+                '<span style="color: red; font-weight: bold;">{} €</span> '
+                '<span style="text-decoration: line-through;">{} €</span>',
                 obj.price, obj.old_price
             )
-        return f'{obj.price} лв.'
+        return f'{obj.price} €'
     price_display.short_description = 'Price'
     
     def stock_status(self, obj):
