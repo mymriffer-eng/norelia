@@ -250,6 +250,10 @@ EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@norelia.com')
 
+# Contact page
+CONTACT_PHONE = env('CONTACT_PHONE', default='0899625453')
+CONTACT_EMAIL = env('CONTACT_EMAIL', default='administration@norelia.bg')
+
 # Security Settings
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

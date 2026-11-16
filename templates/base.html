@@ -52,6 +52,9 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'shop:category_list' %}">Категории</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:contact' %}">Контакти</a>
+                    </li>
                 </ul>
                 
                 <!-- Search -->
@@ -147,14 +150,9 @@
                 
                 <div class="col-md-4 mb-4">
                     <h5>Контакти</h5>
-                    {% if site_settings %}
-                        {% if site_settings.phone %}
-                            <p><i class="bi bi-telephone"></i> {{ site_settings.phone }}</p>
-                        {% endif %}
-                        {% if site_settings.email %}
-                            <p><i class="bi bi-envelope"></i> {{ site_settings.email }}</p>
-                        {% endif %}
-                    {% endif %}
+                    <p><i class="bi bi-telephone"></i> <a href="tel:{{ contact_phone }}" class="text-decoration-none">{{ contact_phone }}</a></p>
+                    <p><i class="bi bi-envelope"></i> <a href="mailto:{{ contact_email }}" class="text-decoration-none">{{ contact_email }}</a></p>
+                    <p><a href="{% url 'core:contact' %}" class="text-decoration-none">Форма за контакт</a></p>
                 </div>
                 
                 <div class="col-md-4 mb-4">

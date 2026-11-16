@@ -1,3 +1,7 @@
+import logging
+
+from django.conf import settings
+from django.core.mail import EmailMessage
 from django.shortcuts import render, redirect
 from django.views.generic import TemplateView
 from django.contrib import messages
@@ -6,7 +10,10 @@ from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta
 from apps.shop.models import Product, Category
-from .models import Testimonial, Newsletter
+from .models import Testimonial, Newsletter, SiteSettings
+from .forms import ContactForm
+
+logger = logging.getLogger(__name__)
 
 
 class HomeView(TemplateView):
@@ -62,6 +69,47 @@ class HomeView(TemplateView):
         context['testimonials'] = Testimonial.objects.filter(is_active=True)[:6]
         
         return context
+
+
+def contact(request):
+    """Contact page with company details and a contact form"""
+    if request.method == 'POST':
+        form = ContactForm(request.POST)
+        if form.is_valid():
+            data = form.cleaned_data
+            body = (
+                f"Име: {data['name']}\n"
+                f"Имейл: {data['email']}\n"
+                f"Телефон: {data['phone'] or '-'}\n\n"
+                f"{data['message']}"
+            )
+            try:
+                EmailMessage(
+                    subject='Ново съобщение от контактната форма',
+                    body=body,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[settings.CONTACT_EMAIL],
+                    reply_to=[data['email']],
+                ).send(fail_silently=False)
+            except Exception:
+                logger.exception('Contact form email failed')
+                messages.error(
+                    request,
+                    f'Съобщението не беше изпратено. Моля, свържете се с нас на телефон {settings.CONTACT_PHONE}.'
+                )
+            else:
+                messages.success(request, 'Благодарим! Съобщението ви беше изпратено. Ще се свържем с вас в най-кратък срок.')
+                return redirect('core:contact')
+    else:
+        form = ContactForm()
+    
+    site = SiteSettings.objects.first()
+    company = {
+        'name': (site.company_name if site and site.company_name else '') or 'Norelia',
+        'vat': site.company_vat if site else '',
+        'address': ((site.company_address or site.address) if site else ''),
+    }
+    return render(request, 'core/contact.html', {'form': form, 'company': company})
 
 
 def newsletter_subscribe(request):

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Контакти - {{ block.super }}{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Свържете се с Norelia Beauty - телефон {{ contact_phone }}, имейл и контактна форма.">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <h1 class="mb-4">Контакти</h1>
+
+    <div class="row g-4">
+        <div class="col-lg-7">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Изпратете ни съобщение</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.name.label_tag }}
+                                {{ form.name }}
+                                {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.email.label_tag }}
+                                {{ form.email }}
+                                {% if form.email.errors %}<div class="text-danger small">{{ form.email.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.phone.label_tag }}
+                            {{ form.phone }}
+                            {% if form.phone.errors %}<div class="text-danger small">{{ form.phone.errors }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.message.label_tag }}
+                            {{ form.message }}
+                            {% if form.message.errors %}<div class="text-danger small">{{ form.message.errors }}</div>{% endif %}
+                        </div>
+
+                        <div style="position:absolute; left:-9999px;" aria-hidden="true">
+                            {{ form.website }}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-send"></i> Изпрати
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">Свържете се с нас</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <i class="bi bi-telephone"></i>
+                        <a href="tel:{{ contact_phone }}" class="text-decoration-none">{{ contact_phone }}</a>
+                    </p>
+                    <p class="mb-4">
+                        <i class="bi bi-envelope"></i>
+                        <a href="mailto:{{ contact_email }}" class="text-decoration-none">{{ contact_email }}</a>
+                    </p>
+
+                    <h6>Данни на фирмата</h6>
+                    <ul class="list-unstyled mb-0">
+                        <li><strong>Фирма:</strong> {{ company.name }}</li>
+                        {% if company.vat %}<li><strong>ЕИК:</strong> {{ company.vat }}</li>{% endif %}
+                        {% if company.address %}<li><strong>Адрес:</strong> {{ company.address }}</li>{% endif %}
+                        <li><strong>Телефон:</strong> {{ contact_phone }}</li>
+                        <li><strong>Имейл:</strong> {{ contact_email }}</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
