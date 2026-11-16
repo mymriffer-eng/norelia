@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block title %}Политика за бисквитки - {{ block.super }}{% endblock %}
+
+{% block meta %}
+<meta name="description" content="Политика за бисквитките, използвани на сайта на Norelia Beauty.">
+{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 900px;">
+    <h1 class="mb-4">Политика за бисквитки</h1>
+    <p class="text-muted">Последна актуализация: {% now "d.m.Y" %}</p>
+
+    <h4 class="mt-4">Какво са бисквитките</h4>
+    <p>
+        Бисквитките са малки текстови файлове, които сайтът записва в браузъра Ви.
+        Те помагат сайтът да работи правилно и да събираме статистика за ползването му.
+    </p>
+
+    <h4 class="mt-4">Какви бисквитки използваме</h4>
+    <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+            <thead class="table-light">
+                <tr><th>Име</th><th>Вид</th><th>Цел</th><th>Срок</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><code>sessionid</code></td>
+                    <td>Необходима</td>
+                    <td>Поддържа сесията Ви - вход в профила и количка за пазаруване</td>
+                    <td>Сесия / до 2 седмици</td>
+                </tr>
+                <tr>
+                    <td><code>csrftoken</code></td>
+                    <td>Необходима</td>
+                    <td>Защита на формулярите от злонамерени заявки</td>
+                    <td>До 1 година</td>
+                </tr>
+                <tr>
+                    <td><code>norelia_cookie_consent</code></td>
+                    <td>Необходима</td>
+                    <td>Запомня избора Ви за бисквитките (записва се в паметта на браузъра)</td>
+                    <td>Докато не го изчистите</td>
+                </tr>
+                <tr>
+                    <td><code>_ga</code>, <code>_ga_*</code></td>
+                    <td>Аналитична (Google Analytics)</td>
+                    <td>Различава посетителите и събира анонимна статистика за ползването на сайта</td>
+                    <td>До 2 години</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <p>
+        Необходимите бисквитки не изискват съгласие, защото без тях сайтът не може да работи.
+        Аналитичните бисквитки се зареждат само ако натиснете "Приемам всички". Ако откажете, Google Analytics не се зарежда.
+    </p>
+
+    <h4 class="mt-4">Управление на избора</h4>
+    <p>
+        Можете да промените избора си по всяко време:
+        <a href="#" data-cookie-settings class="btn btn-outline-primary btn-sm ms-1">Промени настройките на бисквитките</a>
+    </p>
+    <p>
+        Можете също да изтриете или блокирате бисквитките от настройките на браузъра си.
+        Блокирането на необходимите бисквитки може да наруши работата на количката и входа в профила.
+    </p>
+
+    <h4 class="mt-4">Услуги на трети страни</h4>
+    <p>
+        Google Analytics е услуга на Google Ireland Ltd. При съгласие Google получава анонимизиран IP адрес и данни за ползването на сайта.
+        Повече информация: <a href="https://policies.google.com/technologies/cookies?hl=bg" target="_blank" rel="noopener">политика на Google за бисквитките</a>.
+    </p>
+
+    <p>
+        Как обработваме личните Ви данни, е описано в <a href="{% url 'core:privacy' %}">Политиката за поверителност</a>.
+        За въпроси: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
+    </p>
+</div>
+{% endblock %}

@@ -1,0 +1,110 @@
+<div id="cookie-banner" class="cookie-banner shadow-lg" role="dialog" aria-live="polite" aria-label="Съгласие за бисквитки" hidden>
+    <div class="container">
+        <div class="row align-items-center g-3">
+            <div class="col-lg-8">
+                <h6 class="mb-1">Използваме бисквитки</h6>
+                <p class="mb-0 small">
+                    Необходимите бисквитки са нужни за работата на сайта (количка, вход, поръчки).
+                    С Вашето съгласие използваме и аналитични бисквитки (Google Analytics), за да подобрим сайта.
+                    Можете да откажете без последствия. Повече в
+                    <a href="{% url 'core:cookies' %}">Политиката за бисквитки</a> и
+                    <a href="{% url 'core:privacy' %}">Политиката за поверителност</a>.
+                </p>
+            </div>
+            <div class="col-lg-4 d-flex flex-wrap gap-2 justify-content-lg-end">
+                <button type="button" class="btn btn-outline-secondary btn-sm" data-cookie-choice="denied">Само необходимите</button>
+                <button type="button" class="btn btn-primary btn-sm" data-cookie-choice="granted">Приемам всички</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .cookie-banner {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1080;
+        background: #fff;
+        border-top: 1px solid #dee2e6;
+        padding: 1rem 0;
+    }
+    .cookie-banner[hidden] { display: none; }
+</style>
+
+<script>
+(function () {
+    var KEY = 'norelia_cookie_consent';
+    var GA_ID = '{{ google_analytics_id|escapejs }}';
+    var banner = document.getElementById('cookie-banner');
+    var loaded = false;
+
+    function getConsent() {
+        try { return localStorage.getItem(KEY); } catch (e) { return null; }
+    }
+
+    function setConsent(value) {
+        try { localStorage.setItem(KEY, value); } catch (e) {}
+    }
+
+    function loadAnalytics() {
+        if (loaded || !GA_ID) { return; }
+        loaded = true;
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', GA_ID, { anonymize_ip: true });
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + encodeURIComponent(GA_ID);
+        document.head.appendChild(s);
+    }
+
+    function removeAnalyticsCookies() {
+        var host = location.hostname.split('.');
+        var domains = [location.hostname];
+        if (host.length > 1) { domains.push('.' + host.slice(-2).join('.')); }
+        document.cookie.split(';').forEach(function (c) {
+            var name = c.split('=')[0].trim();
+            if (name === '_ga' || name.indexOf('_ga_') === 0 || name === '_gid') {
+                domains.forEach(function (d) {
+                    document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=' + d;
+                });
+                document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+            }
+        });
+    }
+
+    function showBanner() { if (banner) { banner.hidden = false; } }
+    function hideBanner() { if (banner) { banner.hidden = true; } }
+
+    function apply(value) {
+        setConsent(value);
+        hideBanner();
+        if (value === 'granted') {
+            loadAnalytics();
+        } else {
+            removeAnalyticsCookies();
+            if (loaded) { window['ga-disable-' + GA_ID] = true; }
+        }
+    }
+
+    if (banner) {
+        banner.querySelectorAll('[data-cookie-choice]').forEach(function (btn) {
+            btn.addEventListener('click', function () { apply(btn.getAttribute('data-cookie-choice')); });
+        });
+    }
+
+    document.querySelectorAll('[data-cookie-settings]').forEach(function (el) {
+        el.addEventListener('click', function (e) { e.preventDefault(); showBanner(); });
+    });
+
+    var current = getConsent();
+    if (current === 'granted') {
+        loadAnalytics();
+    } else if (current !== 'denied') {
+        showBanner();
+    }
+})();
+</script>

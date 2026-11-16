@@ -6,16 +6,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% if google_site_verification %}<meta name="google-site-verification" content="{{ google_site_verification }}">{% endif %}
-    {% if google_analytics_id %}
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id={{ google_analytics_id }}"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', '{{ google_analytics_id }}');
-    </script>
-    {% endif %}
     
     <title>{% block title %}{{ site_settings.site_name }}{% endblock %}</title>
     
@@ -176,6 +166,7 @@
                             <button class="btn btn-primary" type="submit">Абонирай се</button>
                         </div>
                     </form>
+                    <p class="small text-muted mt-2 mb-0">С абонирането приемате <a href="{% url 'core:privacy' %}">Политиката за поверителност</a>.</p>
                 </div>
             </div>
             
@@ -184,6 +175,12 @@
             <div class="row">
                 <div class="col-12 text-center text-muted">
                     <p>&copy; {% now "Y" %} Norelia Beauty. All rights reserved.</p>
+                    <p class="small">
+                        <a href="{% url 'core:terms' %}" class="text-decoration-none text-muted">Общи условия</a> |
+                        <a href="{% url 'core:privacy' %}" class="text-decoration-none text-muted">Поверителност</a> |
+                        <a href="{% url 'core:cookies' %}" class="text-decoration-none text-muted">Бисквитки</a> |
+                        <a href="#" data-cookie-settings class="text-decoration-none text-muted">Настройки на бисквитките</a>
+                    </p>
                 </div>
             </div>
         </div>
@@ -196,5 +193,6 @@
     <script src="{% static 'js/main.js' %}"></script>
     
     {% block extra_js %}{% endblock %}
+    {% include 'includes/cookie_consent.html' %}
 </body>
 </html>

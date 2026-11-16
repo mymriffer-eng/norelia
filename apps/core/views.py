@@ -103,13 +103,28 @@ def contact(request):
     else:
         form = ContactForm()
     
+    return render(request, 'core/contact.html', {'form': form, 'company': _company_info()})
+
+
+def _company_info():
     site = SiteSettings.objects.first()
-    company = {
+    return {
         'name': (site.company_name if site and site.company_name else '') or 'Norelia',
         'vat': site.company_vat if site else '',
         'address': ((site.company_address or site.address) if site else ''),
     }
-    return render(request, 'core/contact.html', {'form': form, 'company': company})
+
+
+def privacy_policy(request):
+    return render(request, 'core/privacy.html', {'company': _company_info()})
+
+
+def cookie_policy(request):
+    return render(request, 'core/cookies.html', {'company': _company_info()})
+
+
+def terms(request):
+    return render(request, 'core/terms.html', {'company': _company_info()})
 
 
 def newsletter_subscribe(request):
