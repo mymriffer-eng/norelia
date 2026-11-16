@@ -17,4 +17,5 @@ def site_settings(request):
         'contact_phone': settings.CONTACT_PHONE,
         'contact_email': settings.CONTACT_EMAIL,
         'google_site_verification': settings.GOOGLE_SITE_VERIFICATION,
+        'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
     }
