@@ -65,6 +65,7 @@ class InvoiceAdmin(admin.ModelAdmin):
         'order__order_number'
     ]
     readonly_fields = [
+        'invoice_number',
         'subtotal',
         'trade_discount_amount',
         'subtotal_after_discount',

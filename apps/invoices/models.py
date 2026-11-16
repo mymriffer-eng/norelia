@@ -34,7 +34,11 @@ class Invoice(models.Model):
         help_text='Свържете с поръчка или оставете празно за ръчна фактура'
     )
     
-    invoice_number = models.CharField(max_length=50, unique=True, verbose_name='Номер на фактура')
+    invoice_number = models.CharField(
+        max_length=50, unique=True, blank=True, editable=False,
+        verbose_name='Номер на фактура',
+        help_text='Задава се автоматично'
+    )
     invoice_date = models.DateField(verbose_name='Дата на фактура')
     
     # Customer type
