@@ -254,6 +254,9 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@norelia.com')
 CONTACT_PHONE = env('CONTACT_PHONE', default='0899625453')
 CONTACT_EMAIL = env('CONTACT_EMAIL', default='administration@norelia.bg')
 
+# Google Search Console: content of the verification meta tag (HTML tag method)
+GOOGLE_SITE_VERIFICATION = env('GOOGLE_SITE_VERIFICATION', default='')
+
 # Security Settings
 if not DEBUG:
     SECURE_SSL_REDIRECT = True

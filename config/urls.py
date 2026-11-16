@@ -16,10 +16,11 @@ env = environ.Env()
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 ADMIN_URL = env('ADMIN_URL', default='admin/')
 
-from apps.shop.sitemaps import ProductSitemap, CategorySitemap
+from apps.shop.sitemaps import ProductSitemap, CategorySitemap, StaticViewSitemap
 
 # Sitemaps
 sitemaps = {
+    'static': StaticViewSitemap,
     'products': ProductSitemap,
     'categories': CategorySitemap,
 }
