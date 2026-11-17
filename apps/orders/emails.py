@@ -58,6 +58,33 @@ def send_order_received_email(order):
         f'Norelia Beauty - получихме вашата поръчка {order.order_number}',
         'Благодарим ви за поръчката! Получихме я и скоро ще се свържем с вас за потвърждение.',
     )
+    send_admin_new_order_email(order)
+
+
+def send_admin_new_order_email(order):
+    """Notify the shop owner about a new order."""
+    admin_path = reverse('admin:orders_order_change', args=[order.pk])
+    body = (
+        f'Нова поръчка {order.order_number}\n\n'
+        f'Клиент: {order.get_full_name()}\n'
+        f'Имейл: {order.email}\n'
+        f'Телефон: {order.phone}\n'
+        f'Адрес за доставка: {order.city}, {order.address}\n'
+        f'Начин на плащане: {order.get_payment_method_display()}\n\n'
+        f'Продукти:\n{_items_text(order)}\n\n'
+        f'Обща сума: {order.total} €\n'
+        f'Доставка: {SHIPPING_TEXT}\n\n'
+        f'Поръчка в админ панела: {settings.SITE_URL.rstrip("/")}{admin_path}\n'
+    )
+    try:
+        send_mail(
+            f'Нова поръчка {order.order_number} - {order.total} €',
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.CONTACT_EMAIL],
+        )
+    except Exception:
+        logger.exception('Failed to send admin order email for %s', order.order_number)
 
 
 def send_order_status_email(order):
