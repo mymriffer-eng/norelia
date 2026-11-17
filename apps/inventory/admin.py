@@ -29,11 +29,11 @@ class ProductInventoryAdmin(admin.ModelAdmin):
     list_filter = ['updated_at']
     search_fields = ['product__name', 'product__sku']
     readonly_fields = ['updated_at']
-    sku_display(self, obj):
+    
+    def sku_display(self, obj):
         return obj.product.sku
     sku_display.short_description = 'SKU'
     
-    def 
     def available_display(self, obj):
         return obj.available_quantity()
     available_display.short_description = 'Available'
