@@ -18,6 +18,7 @@ class SupplierAdmin(admin.ModelAdmin):
 class ProductInventoryAdmin(admin.ModelAdmin):
     list_display = [
         'product',
+        'sku_display',
         'current_quantity',
         'reserved_quantity',
         'available_display',
@@ -28,7 +29,11 @@ class ProductInventoryAdmin(admin.ModelAdmin):
     list_filter = ['updated_at']
     search_fields = ['product__name', 'product__sku']
     readonly_fields = ['updated_at']
+    sku_display(self, obj):
+        return obj.product.sku
+    sku_display.short_description = 'SKU'
     
+    def 
     def available_display(self, obj):
         return obj.available_quantity()
     available_display.short_description = 'Available'
@@ -54,8 +59,15 @@ class ProductInventoryAdmin(admin.ModelAdmin):
 class PurchaseDeliveryItemInline(admin.TabularInline):
     model = PurchaseDeliveryItem
     extra = 1
-    fields = ['product', 'quantity', 'purchase_price', 'total_display']
-    readonly_fields = ['total_display']
+    fields = ['product', 'sku_display', 'quantity', 'purchase_price', 'total_display']
+    readonly_fields = ['sku_display', 'total_display']
+    autocomplete_fields = ['product']
+    
+    def sku_display(self, obj):
+        if obj.pk and obj.product_id:
+            return obj.product.sku
+        return '-'
+    sku_display.short_description = 'SKU'
     
     def total_display(self, obj):
         if obj.id:
