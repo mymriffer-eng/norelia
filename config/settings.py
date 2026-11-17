@@ -256,7 +256,7 @@ CONTACT_EMAIL = env('CONTACT_EMAIL', default='administration@norelia.bg')
 
 # Google Search Console: content of the verification meta tag (HTML tag method)
 GOOGLE_SITE_VERIFICATION = env('GOOGLE_SITE_VERIFICATION', default='LrdOLqUAKKVi4pQ1v5W6EvdyJQLdtDN4ljIYYcabSj8')
-GOOGLE_ANALYTICS_ID = env('GOOGLE_ANALYTICS_ID', default='G-CDMBEWF3WW')
+GOOGLE_ANALYTICS_ID = env('GOOGLE_ANALYTICS_ID', default='G-VRTJ7FC0DB')
 
 # Security Settings
 if not DEBUG:
