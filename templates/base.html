@@ -19,16 +19,14 @@
     <meta name="keywords" content="{{ site_settings.meta_keywords }}">
     {% endblock %}
     
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap 5 CSS (self-hosted) -->
+    <link href="{% static 'vendor/bootstrap/bootstrap.min.css' %}" rel="stylesheet">
     
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Bootstrap Icons (self-hosted) -->
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.css' %}">
     
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Montserrat (self-hosted) -->
+    <link rel="stylesheet" href="{% static 'vendor/fonts/montserrat.css' %}">
     
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{% static 'css/main.css' %}">
@@ -165,8 +163,14 @@
                             <input type="email" name="email" class="form-control" placeholder="Вашият имейл" required>
                             <button class="btn btn-primary" type="submit">Абонирай се</button>
                         </div>
+                        <div class="form-check mt-2">
+                            <input class="form-check-input" type="checkbox" name="consent" id="nl-consent-footer" required>
+                            <label class="form-check-label small text-muted" for="nl-consent-footer">
+                                Съгласен/съгласна съм да получавам бюлетин с новини и промоции на моя имейл. Мога да се отпиша по всяко време.
+                            </label>
+                        </div>
                     </form>
-                    <p class="small text-muted mt-2 mb-0">С абонирането приемате <a href="{% url 'core:privacy' %}">Политиката за поверителност</a>.</p>
+                    <p class="small text-muted mt-2 mb-0">Информация за обработването на данните – в <a href="{% url 'core:privacy' %}">Политиката за поверителност</a>.</p>
                 </div>
             </div>
             
@@ -174,7 +178,10 @@
             
             <div class="row">
                 <div class="col-12 text-center text-muted">
-                    <p>&copy; {% now "Y" %} Norelia Beauty. All rights reserved.</p>
+                    <p class="small mb-1">
+                        <strong>{{ company.name }}</strong>{% if company.vat %} | ЕИК/БУЛСТАТ: {{ company.vat }}{% endif %}{% if company.address %} | {{ company.address }}{% endif %}
+                    </p>
+                    <p>&copy; {% now "Y" %} Norelia Beauty. Всички права запазени.</p>
                     <p class="small">
                         <a href="{% url 'core:terms' %}" class="text-decoration-none text-muted">Общи условия</a> |
                         <a href="{% url 'core:privacy' %}" class="text-decoration-none text-muted">Поверителност</a> |
@@ -187,7 +194,7 @@
     </footer>
     
     <!-- Bootstrap 5 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
     
     <!-- Custom JS -->
     <script src="{% static 'js/main.js' %}"></script>

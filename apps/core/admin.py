@@ -36,10 +36,10 @@ class SiteSettingsAdmin(admin.ModelAdmin):
 
 @admin.register(Newsletter)
 class NewsletterAdmin(admin.ModelAdmin):
-    list_display = ['email', 'subscribed_at', 'is_active']
-    list_filter = ['is_active', 'subscribed_at']
+    list_display = ['email', 'subscribed_at', 'is_active', 'is_confirmed', 'confirmed_at']
+    list_filter = ['is_active', 'is_confirmed', 'subscribed_at']
     search_fields = ['email']
-    readonly_fields = ['subscribed_at']
+    readonly_fields = ['subscribed_at', 'confirmed_at']
     # date_hierarchy is intentionally omitted because MySQL/MariaDB without timezone tables
     # can raise "Database returned an invalid datetime value" when the admin tries to group by date.
 

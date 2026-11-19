@@ -1,4 +1,9 @@
 from django.db import models
+from django.utils.crypto import get_random_string
+
+
+def _newsletter_token():
+    return get_random_string(40)
 
 
 class SiteSettings(models.Model):
@@ -52,10 +57,16 @@ class SiteSettings(models.Model):
 
 
 class Newsletter(models.Model):
-    """Newsletter subscriptions"""
+    """
+    Newsletter subscriptions (double opt-in).
+    Only send to rows with is_active=True AND is_confirmed=True.
+    """
     email = models.EmailField(unique=True)
     subscribed_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    is_confirmed = models.BooleanField(default=False, verbose_name='Потвърден абонамент')
+    confirmed_at = models.DateTimeField(null=True, blank=True, verbose_name='Дата на съгласието')
+    token = models.CharField(max_length=40, default=_newsletter_token, editable=False, db_index=True)
     
     class Meta:
         verbose_name = 'Newsletter Subscription'

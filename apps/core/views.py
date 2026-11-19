@@ -1,8 +1,12 @@
 import logging
 
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.exceptions import ValidationError
+from django.core.mail import EmailMessage, send_mail
+from django.core.validators import validate_email
 from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.views.generic import TemplateView
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -10,7 +14,7 @@ from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta
 from apps.shop.models import Product, Category
-from .models import Testimonial, Newsletter, SiteSettings
+from .models import Testimonial, Newsletter
 from .forms import ContactForm
 
 logger = logging.getLogger(__name__)
@@ -103,55 +107,111 @@ def contact(request):
     else:
         form = ContactForm()
     
-    return render(request, 'core/contact.html', {'form': form, 'company': _company_info()})
-
-
-def _company_info():
-    site = SiteSettings.objects.first()
-    return {
-        'name': (site.company_name if site and site.company_name else '') or 'Norelia',
-        'vat': site.company_vat if site else '',
-        'address': ((site.company_address or site.address) if site else ''),
-    }
+    return render(request, 'core/contact.html', {'form': form})
 
 
 def privacy_policy(request):
-    return render(request, 'core/privacy.html', {'company': _company_info()})
+    return render(request, 'core/privacy.html')
 
 
 def cookie_policy(request):
-    return render(request, 'core/cookies.html', {'company': _company_info()})
+    return render(request, 'core/cookies.html')
 
 
 def terms(request):
-    return render(request, 'core/terms.html', {'company': _company_info()})
+    return render(request, 'core/terms.html')
+
+
+def _back(request):
+    """Redirect to the previous page if it is on this site, otherwise home"""
+    referer = request.META.get('HTTP_REFERER', '')
+    if referer and url_has_allowed_host_and_scheme(referer, allowed_hosts={request.get_host()}, require_https=request.is_secure()):
+        return redirect(referer)
+    return redirect('core:home')
+
+
+def _send_newsletter_confirmation(newsletter):
+    base = settings.SITE_URL.rstrip('/')
+    confirm_url = base + reverse('core:newsletter_confirm', args=[newsletter.token])
+    unsubscribe_url = base + reverse('core:newsletter_unsubscribe', args=[newsletter.token])
+    body = (
+        'Здравейте!\n\n'
+        'Получихме заявка за абониране на този имейл за бюлетина на Norelia Beauty.\n'
+        'За да потвърдите абонамента си, последвайте връзката:\n'
+        f'{confirm_url}\n\n'
+        'Ако не сте подавали такава заявка, просто игнорирайте това съобщение. '
+        'Няма да получавате бюлетини, докато не потвърдите.\n\n'
+        f'Отписване по всяко време: {unsubscribe_url}\n\n'
+        f'Поздрави,\nNorelia Beauty\n{base}\n'
+    )
+    try:
+        send_mail(
+            'Norelia Beauty - потвърдете абонамента си за бюлетина',
+            body,
+            settings.DEFAULT_FROM_EMAIL,
+            [newsletter.email],
+        )
+    except Exception:
+        logger.exception('Newsletter confirmation email failed')
+        return False
+    return True
 
 
 def newsletter_subscribe(request):
-    """Handle newsletter subscription via AJAX or POST"""
-    if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        
-        if not email:
-            messages.error(request, 'Моля, въведете имейл адрес.')
-            return redirect('core:home')
-        
-        # Check if already subscribed
-        if Newsletter.objects.filter(email=email).exists():
-            newsletter = Newsletter.objects.get(email=email)
-            if newsletter.is_active:
-                messages.info(request, 'Вече сте абонирани за нашия бюлетин.')
-            else:
-                newsletter.is_active = True
-                newsletter.save()
-                messages.success(request, 'Абонаментът Ви е активиран отново!')
-        else:
-            Newsletter.objects.create(email=email)
-            messages.success(request, 'Благодарим! Успешно се абонирахте за нашия бюлетин.')
-        
-        from django.shortcuts import redirect
+    """Newsletter subscription with explicit consent and double opt-in"""
+    if request.method != 'POST':
         return redirect('core:home')
-    
+
+    email = request.POST.get('email', '').strip()
+    try:
+        validate_email(email)
+    except ValidationError:
+        messages.error(request, 'Моля, въведете валиден имейл адрес.')
+        return _back(request)
+
+    if not request.POST.get('consent'):
+        messages.error(request, 'За абониране трябва да дадете съгласие за получаване на бюлетина.')
+        return _back(request)
+
+    newsletter, created = Newsletter.objects.get_or_create(email=email)
+    if not created and newsletter.is_confirmed and newsletter.is_active:
+        messages.info(request, 'Вече сте абонирани за нашия бюлетин.')
+        return redirect('core:home')
+
+    # (Re)start the opt-in flow; consent is only valid after confirmation
+    newsletter.is_active = True
+    newsletter.is_confirmed = False
+    newsletter.confirmed_at = None
+    newsletter.save()
+    if _send_newsletter_confirmation(newsletter):
+        messages.success(request, 'Изпратихме Ви имейл. Моля, потвърдете абонамента си чрез връзката в него.')
+    else:
+        messages.error(request, 'Не успяхме да изпратим имейл за потвърждение. Моля, опитайте отново по-късно.')
+    return redirect('core:home')
+
+
+def newsletter_confirm(request, token):
+    newsletter = Newsletter.objects.filter(token=token).first()
+    if not newsletter:
+        messages.error(request, 'Невалидна или изтекла връзка за потвърждение.')
+    else:
+        if not newsletter.is_confirmed:
+            newsletter.is_confirmed = True
+            newsletter.is_active = True
+            newsletter.confirmed_at = timezone.now()
+            newsletter.save()
+        messages.success(request, 'Абонаментът Ви за бюлетина е потвърден. Благодарим!')
+    return redirect('core:home')
+
+
+def newsletter_unsubscribe(request, token):
+    newsletter = Newsletter.objects.filter(token=token).first()
+    if not newsletter:
+        messages.error(request, 'Невалидна връзка за отписване.')
+    else:
+        newsletter.is_active = False
+        newsletter.save()
+        messages.success(request, 'Отписахте се от бюлетина. Няма да получавате повече съобщения.')
     return redirect('core:home')
 
 
