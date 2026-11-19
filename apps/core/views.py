@@ -14,7 +14,7 @@ from django.db.models import Count, Sum
 from django.utils import timezone
 from datetime import timedelta
 from apps.shop.models import Product, Category
-from .models import Testimonial, Newsletter
+from .models import Testimonial, Newsletter, HeroSlide
 from .forms import ContactForm
 
 logger = logging.getLogger(__name__)
@@ -34,6 +34,9 @@ class HomeView(TemplateView):
     
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
+        # Hero slides (managed in admin)
+        context['hero_slides'] = HeroSlide.objects.filter(is_active=True)
         
         # Get active categories
         context['categories'] = Category.objects.filter(is_active=True)[:8]

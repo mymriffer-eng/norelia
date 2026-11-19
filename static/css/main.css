@@ -68,6 +68,10 @@ body {
 }
 
 /* Hero Section */
+.hero-carousel .carousel-item img {
+    aspect-ratio: 3 / 2;
+    object-fit: cover;
+}
 .hero {
     background: linear-gradient(135deg, var(--light-pink) 0%, #fff 100%);
 }

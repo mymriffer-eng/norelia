@@ -93,3 +93,21 @@ class Testimonial(models.Model):
     
     def __str__(self):
         return f'{self.name} - {self.rating} stars'
+
+
+class HeroSlide(models.Model):
+    """Slide shown in the carousel in the hero section of the homepage"""
+    image = models.ImageField(upload_to='hero/', verbose_name='Снимка', help_text='Препоръчително: хоризонтална снимка, поне 1200x800 px')
+    alt_text = models.CharField(max_length=200, blank=True, verbose_name='Описание на снимката')
+    link_url = models.CharField(max_length=300, blank=True, verbose_name='Връзка (по избор)', help_text='Напр. /categories/ или пълен адрес')
+    order = models.IntegerField(default=0, verbose_name='Ред', help_text='По-малкото число се показва първо')
+    is_active = models.BooleanField(default=True, verbose_name='Активен')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Слайд на началната страница'
+        verbose_name_plural = 'Слайдове на началната страница'
+        ordering = ['order', '-created_at']
+
+    def __str__(self):
+        return self.alt_text or f'Слайд {self.pk}'

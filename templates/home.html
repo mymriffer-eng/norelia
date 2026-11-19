@@ -15,7 +15,36 @@
                 <a href="{% url 'shop:category_list' %}" class="btn btn-primary btn-lg">Разгледай продукти</a>
             </div>
             <div class="col-lg-6">
-                <img src="{% static 'images/hero-image.jpg' %}" class="img-fluid rounded" alt="Korean Cosmetics" onerror="this.style.display='none'">
+                {% if hero_slides %}
+                <div id="heroCarousel" class="carousel slide carousel-fade hero-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+                    {% if hero_slides|length > 1 %}
+                    <div class="carousel-indicators">
+                        {% for slide in hero_slides %}
+                        <button type="button" data-bs-target="#heroCarousel" data-bs-slide-to="{{ forloop.counter0 }}"{% if forloop.first %} class="active" aria-current="true"{% endif %} aria-label="Слайд {{ forloop.counter }}"></button>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                    <div class="carousel-inner rounded">
+                        {% for slide in hero_slides %}
+                        <div class="carousel-item{% if forloop.first %} active{% endif %}">
+                            {% if slide.link_url %}<a href="{{ slide.link_url }}">{% endif %}
+                            <img src="{{ slide.image.url }}" class="d-block w-100" alt="{{ slide.alt_text|default:'Korean Cosmetics' }}"{% if not forloop.first %} loading="lazy"{% endif %}>
+                            {% if slide.link_url %}</a>{% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% if hero_slides|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#heroCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Предишен</span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#heroCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                        <span class="visually-hidden">Следващ</span>
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

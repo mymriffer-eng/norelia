@@ -1,5 +1,19 @@
 from django.contrib import admin
-from .models import SiteSettings, Newsletter, Testimonial
+from django.utils.html import format_html
+from .models import SiteSettings, Newsletter, Testimonial, HeroSlide
+
+
+@admin.register(HeroSlide)
+class HeroSlideAdmin(admin.ModelAdmin):
+    list_display = ['preview', 'alt_text', 'order', 'is_active']
+    list_editable = ['order', 'is_active']
+    list_display_links = ['preview', 'alt_text']
+
+    @admin.display(description='Снимка')
+    def preview(self, obj):
+        if obj.image:
+            return format_html('<img src="{}" style="height:60px;border-radius:4px;">', obj.image.url)
+        return '-'
 
 
 @admin.register(SiteSettings)
