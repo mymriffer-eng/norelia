@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.db import transaction
 from django.utils.html import format_html
 from django.urls import reverse
 from .models import Order, OrderItem
@@ -126,8 +127,26 @@ class OrderAdmin(admin.ModelAdmin):
         return False
     
     def has_delete_permission(self, request, obj=None):
-        # Don't allow deletion for audit trail
-        return False
+        # Only superusers may delete orders (e.g. test orders); staff can only cancel
+        return request.user.is_superuser
+    
+    def _release_stock(self, order):
+        """Return/release stock for an order that is about to be deleted (no email, no save)."""
+        from .services import OrderService
+        previous = order.status
+        order.status = 'cancelled'
+        OrderService.sync_inventory(order, previous)
+    
+    @transaction.atomic
+    def delete_model(self, request, obj):
+        self._release_stock(obj)
+        super().delete_model(request, obj)
+    
+    @transaction.atomic
+    def delete_queryset(self, request, queryset):
+        for order in queryset:
+            self._release_stock(order)
+        super().delete_queryset(request, queryset)
     
     # Custom actions
     actions = ['mark_as_confirmed', 'mark_as_shipped', 'mark_as_delivered', 'mark_as_cancelled']
