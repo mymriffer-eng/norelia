@@ -1,4 +1,5 @@
 from decimal import Decimal, ROUND_HALF_UP
+import re
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
@@ -140,29 +141,21 @@ class Invoice(models.Model):
     
     @staticmethod
     def generate_invoice_number():
-        """Generate invoice number in format: YYYY-NNNNNN"""
-        from django.utils import timezone
+        """Generate the next sequential invoice number in format: NNNNNN"""
         from django.conf import settings
         
-        year = timezone.now().year
-        prefix = getattr(settings, 'INVOICE_NUMBER_PREFIX', str(year))
+        last_number = 0
+        for number in Invoice.objects.values_list('invoice_number', flat=True):
+            match = re.search(r'(\d+)$', number or '')
+            if match:
+                last_number = max(last_number, int(match.group(1)))
         
-        # Get last invoice number for this year
-        last_invoice = Invoice.objects.filter(
-            invoice_number__startswith=f'{prefix}-'
-        ).order_by('-invoice_number').first()
-        
-        if last_invoice:
-            # Extract number part
-            try:
-                last_number = int(last_invoice.invoice_number.split('-')[1])
-                next_number = last_number + 1
-            except (IndexError, ValueError):
-                next_number = getattr(settings, 'INVOICE_START_NUMBER', 1)
+        if last_number:
+            next_number = last_number + 1
         else:
             next_number = getattr(settings, 'INVOICE_START_NUMBER', 1)
         
-        return f'{prefix}-{next_number:06d}'
+        return f'{next_number:06d}'
 
 
 class CatalogService(models.Model):

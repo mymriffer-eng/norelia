@@ -8,6 +8,7 @@ def company_info(site):
     return {
         'name': (site.company_name if site and site.company_name else '') or 'Norelia',
         'vat': site.company_vat if site else '',
+        'vat_number': site.vat_number if site else '',
         'address': ((site.company_address or site.address) if site else ''),
     }
 

@@ -29,7 +29,7 @@ class SiteSettingsAdmin(admin.ModelAdmin):
             'fields': ('facebook_url', 'instagram_url')
         }),
         ('Business Information', {
-            'fields': ('company_name', 'company_vat', 'company_address')
+            'fields': ('company_name', 'company_vat', 'company_vat_number', 'company_address')
         }),
         ('SEO', {
             'fields': ('meta_keywords',)

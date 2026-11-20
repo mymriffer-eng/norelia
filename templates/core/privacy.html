@@ -13,7 +13,7 @@
 
     <h4 class="mt-4">1. Администратор на лични данни</h4>
     <p>
-        <strong>{{ company.name }}</strong>{% if company.vat %}, ЕИК/БУЛСТАТ: {{ company.vat }}{% endif %}{% if company.address %},
+        <strong>{{ company.name }}</strong>{% if company.vat %}, ЕИК: {{ company.vat }}{% endif %}{% if company.vat_number %}, ДДС номер: {{ company.vat_number }}{% endif %}{% if company.address %},
         адрес: {{ company.address }}{% endif %}.<br>
         Имейл: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>, телефон: <a href="tel:{{ contact_phone }}">{{ contact_phone }}</a>.
     </p>

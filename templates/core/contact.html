@@ -80,6 +80,7 @@
                     <ul class="list-unstyled mb-0">
                         <li><strong>Фирма:</strong> {{ company.name }}</li>
                         {% if company.vat %}<li><strong>ЕИК:</strong> {{ company.vat }}</li>{% endif %}
+                        {% if company.vat_number %}<li><strong>ДДС номер:</strong> {{ company.vat_number }}</li>{% endif %}
                         {% if company.address %}<li><strong>Адрес:</strong> {{ company.address }}</li>{% endif %}
                         <li><strong>Телефон:</strong> {{ contact_phone }}</li>
                         <li><strong>Имейл:</strong> {{ contact_email }}</li>

@@ -13,7 +13,7 @@
 
     <h4 class="mt-4">1. Данни за търговеца</h4>
     <p>
-        <strong>{{ company.name }}</strong>{% if company.vat %}, ЕИК/БУЛСТАТ: {{ company.vat }}{% endif %}{% if company.address %},
+        <strong>{{ company.name }}</strong>{% if company.vat %}, ЕИК: {{ company.vat }}{% endif %}{% if company.vat_number %}, ДДС номер: {{ company.vat_number }}{% endif %}{% if company.address %},
         адрес: {{ company.address }}{% endif %}.<br>
         Телефон: <a href="tel:{{ contact_phone }}">{{ contact_phone }}</a>, имейл: <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>.
         Сайт: norelia.bg.

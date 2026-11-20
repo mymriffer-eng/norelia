@@ -17,6 +17,22 @@ from .models import Invoice, InvoiceItem, split_vat, get_vat_rate
 from apps.core.models import SiteSettings
 
 
+class ClosingTable(Table):
+    """Table whose outer border is closed at the bottom of the page where it splits
+    and reopened at the top of the continuation (ReportLab leaves it open)."""
+    
+    BORDER = (1.5, colors.black)
+    
+    def split(self, availWidth, availHeight):
+        parts = super().split(availWidth, availHeight)
+        if len(parts) == 2:
+            first, second = parts
+            width, color = self.BORDER
+            first.setStyle(TableStyle([('LINEBELOW', (0, -1), (-1, -1), width, color)]))
+            second.setStyle(TableStyle([('LINEABOVE', (0, 0), (-1, 0), width, color)]))
+        return parts
+
+
 def _clean(value):
     """Single-line text: line breaks/control characters render as boxes in PDF tables"""
     text = re.sub(r'\s*[\r\n]+\s*', ', ', str(value or ''))
@@ -176,10 +192,12 @@ class InvoiceService:
             site_settings = SiteSettings.objects.first()
             company_name = site_settings.company_name or 'Norelia'
             company_vat = site_settings.company_vat or ''
+            company_vat_number = site_settings.vat_number
             company_address = site_settings.company_address or ''
         except:
             company_name = 'Norelia'
             company_vat = ''
+            company_vat_number = ''
             company_address = ''
         
         # Title
@@ -206,8 +224,10 @@ class InvoiceService:
         info_data = [
             ['Издател:', _clean(company_name)],
             ['ЕИК:', _clean(company_vat)],
-            ['Адрес:', _clean(company_address)],
         ]
+        if company_vat_number:
+            info_data.append(['ДДС номер:', _clean(company_vat_number)])
+        info_data.append(['Адрес:', _clean(company_address)])
         
         value_style = ParagraphStyle(
             'InfoValue', parent=styles['Normal'], fontName=font_name, fontSize=10, leading=12
@@ -233,7 +253,6 @@ class InvoiceService:
                 ['ДДС номер:', _clean(invoice.company_vat_number) or '-'],
                 ['МОЛ:', _clean(invoice.company_mol) or '-'],
                 ['Телефон:', _clean(invoice.customer_phone)],
-                ['Имейл:', _clean(invoice.customer_email) or '-'],
                 ['Адрес:', _clean(invoice.customer_address)],
             ]
         else:
@@ -241,7 +260,6 @@ class InvoiceService:
             customer_data = [
                 ['Име:', _clean(invoice.customer_name)],
                 ['Телефон:', _clean(invoice.customer_phone)],
-                ['Имейл:', _clean(invoice.customer_email) or '-'],
                 ['Адрес:', _clean(invoice.customer_address)],
             ]
         
@@ -305,7 +323,7 @@ class InvoiceService:
                     f'{line["subtotal"]:.2f}',
                 ])
             
-            items_table = Table(
+            items_table = ClosingTable(
                 items_data,
                 colWidths=[0.8*cm, 2.3*cm, 5.1*cm, 1.2*cm, 1.9*cm, 1.9*cm, 1.9*cm, 1.9*cm],
                 repeatRows=1,
@@ -344,7 +362,7 @@ class InvoiceService:
         totals.append((f'ДДС {vat_percent_text}%:', f'{total_vat:.2f} €', 'bold'))
         totals.append(('ОБЩО за плащане (с ДДС):', f'{invoice.total:.2f} €', 'grand'))
         
-        total_table = Table([[label, value] for label, value, _ in totals], colWidths=[13*cm, 4*cm])
+        total_table = ClosingTable([[label, value] for label, value, _ in totals], colWidths=[13*cm, 4*cm])
         total_style = [
             ('FONTNAME', (0, 0), (-1, -1), font_name),
             ('FONTSIZE', (0, 0), (-1, -1), 10),

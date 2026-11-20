@@ -28,7 +28,11 @@ class SiteSettings(models.Model):
     
     # Business info
     company_name = models.CharField(max_length=200, blank=True)
-    company_vat = models.CharField(max_length=50, blank=True, verbose_name='ЕИК/БУЛСТАТ')
+    company_vat = models.CharField(max_length=50, blank=True, verbose_name='ЕИК')
+    company_vat_number = models.CharField(
+        max_length=50, blank=True, verbose_name='ДДС номер',
+        help_text='Попълва се само ако фирмата е регистрирана по ЗДДС. Префиксът BG се добавя автоматично.'
+    )
     company_address = models.TextField(blank=True)
     
     # Settings
@@ -48,6 +52,14 @@ class SiteSettings(models.Model):
     
     def __str__(self):
         return self.site_name
+    
+    @property
+    def vat_number(self):
+        """VAT number with the BG prefix, or empty if not VAT registered"""
+        value = (self.company_vat_number or '').replace(' ', '').upper()
+        if not value:
+            return ''
+        return value if value.startswith('BG') else f'BG{value}'
     
     def save(self, *args, **kwargs):
         # Ensure only one instance exists

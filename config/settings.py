@@ -314,7 +314,6 @@ LOGGING = {
 }
 
 # Invoice settings
-INVOICE_NUMBER_PREFIX = '2026'
 INVOICE_START_NUMBER = 1
 
 # VAT Rate (20% for Bulgaria)
