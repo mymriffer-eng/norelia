@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 from apps.shop.models import Product
@@ -97,6 +98,16 @@ class Order(models.Model):
     
     def get_full_name(self):
         return f'{self.first_name} {self.last_name}'
+    
+    @property
+    def has_free_shipping(self):
+        return self.subtotal > settings.FREE_SHIPPING_THRESHOLD
+    
+    @property
+    def shipping_label(self):
+        if self.has_free_shipping:
+            return 'Безплатна доставка'
+        return 'Според тарифата на куриера'
     
     def get_status_display_color(self):
         """Get color for status badge"""

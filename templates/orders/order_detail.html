@@ -47,7 +47,7 @@
                                 </tr>
                                 <tr>
                                     <td colspan="4" class="text-end"><strong>Доставка:</strong></td>
-                                    <td><strong>Според тарифата на куриера</strong></td>
+                                    <td><strong>{% if order.has_free_shipping %}<span class="text-success">{{ order.shipping_label }}</span>{% else %}{{ order.shipping_label }}{% endif %}</strong></td>
                                 </tr>
                                 <tr class="table-primary">
                                     <td colspan="4" class="text-end"><strong>ОБЩО:</strong></td>

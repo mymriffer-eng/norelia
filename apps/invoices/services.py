@@ -3,6 +3,7 @@ import re
 from decimal import Decimal
 from io import BytesIO
 from xml.sax.saxutils import escape
+from django.conf import settings
 from django.utils import timezone
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.units import cm
@@ -335,6 +336,8 @@ class InvoiceService:
         
         if invoice.shipping_cost and invoice.shipping_cost > 0:
             totals.append(('Доставка:', f'{invoice.shipping_cost:.2f} €', 'normal'))
+        elif invoice.total > settings.FREE_SHIPPING_THRESHOLD:
+            totals.append(('Доставка: безплатна', '', 'normal'))
         else:
             totals.append(('Доставка: според тарифата на куриера', '', 'normal'))
         

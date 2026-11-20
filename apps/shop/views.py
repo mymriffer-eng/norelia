@@ -1,10 +1,21 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.conf import settings
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q
 from .models import Category, Product
 from .forms import CheckoutForm
 from apps.orders.services import OrderService
+
+
+def _shipping_info(total):
+    """Free shipping flag and the amount still missing for it"""
+    threshold = settings.FREE_SHIPPING_THRESHOLD
+    free = total > threshold
+    return {
+        'free_shipping': free,
+        'free_shipping_left': None if free else threshold - total,
+    }
 
 
 def category_list(request):
@@ -123,6 +134,7 @@ def cart_view(request):
     context = {
         'cart_items': cart_items,
         'total': total,
+        **_shipping_info(total),
     }
     
     return render(request, 'shop/cart.html', context)
@@ -286,6 +298,7 @@ def checkout(request):
         'form': form,
         'cart_items': cart_items,
         'total': total,
+        **_shipping_info(total),
     }
     
     return render(request, 'shop/checkout.html', context)

@@ -6,8 +6,6 @@ from django.urls import reverse
 
 logger = logging.getLogger(__name__)
 
-SHIPPING_TEXT = 'Според тарифата на куриера'
-
 STATUS_MESSAGES = {
     'confirmed': 'Вашата поръчка беше потвърдена и се подготвя за изпращане.',
     'shipped': 'Вашата поръчка беше изпратена към куриер. Очаквайте доставка в най-кратък срок.',
@@ -37,7 +35,7 @@ def _send(order, subject, intro):
         f'Статус: {order.get_status_display()}\n\n'
         f'Продукти:\n{_items_text(order)}\n\n'
         f'Междинна сума: {order.subtotal} €\n'
-        f'Доставка: {SHIPPING_TEXT}\n'
+        f'Доставка: {order.shipping_label}\n'
         f'Обща сума: {order.total} €\n'
         f'Начин на плащане: {order.get_payment_method_display()}\n\n'
         f'Адрес за доставка: {order.city}, {order.address}\n'
@@ -73,7 +71,7 @@ def send_admin_new_order_email(order):
         f'Начин на плащане: {order.get_payment_method_display()}\n\n'
         f'Продукти:\n{_items_text(order)}\n\n'
         f'Обща сума: {order.total} €\n'
-        f'Доставка: {SHIPPING_TEXT}\n\n'
+        f'Доставка: {order.shipping_label}\n\n'
         f'Поръчка в админ панела: {settings.SITE_URL.rstrip("/")}{admin_path}\n'
     )
     try:

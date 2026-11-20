@@ -26,6 +26,7 @@ def site_settings(request):
         'company': company_info(settings_obj),
         'contact_phone': settings.CONTACT_PHONE,
         'contact_email': settings.CONTACT_EMAIL,
+        'free_shipping_threshold': settings.FREE_SHIPPING_THRESHOLD,
         'google_site_verification': settings.GOOGLE_SITE_VERIFICATION,
         'google_analytics_id': settings.GOOGLE_ANALYTICS_ID,
     }

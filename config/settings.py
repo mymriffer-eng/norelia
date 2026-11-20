@@ -4,6 +4,7 @@ Production-ready configuration for Korean Cosmetics Shop.
 """
 
 from pathlib import Path
+from decimal import Decimal
 import environ
 import os
 
@@ -253,6 +254,9 @@ DEFAULT_FROM_EMAIL = env('DEFAULT_FROM_EMAIL', default='noreply@norelia.com')
 # Contact page
 CONTACT_PHONE = env('CONTACT_PHONE', default='0899625453')
 CONTACT_EMAIL = env('CONTACT_EMAIL', default='administration@norelia.bg')
+
+# Free shipping for orders with a total strictly above this amount (EUR)
+FREE_SHIPPING_THRESHOLD = Decimal(env('FREE_SHIPPING_THRESHOLD', default='50'))
 
 # Google Search Console: content of the verification meta tag (HTML tag method)
 GOOGLE_SITE_VERIFICATION = env('GOOGLE_SITE_VERIFICATION', default='LrdOLqUAKKVi4pQ1v5W6EvdyJQLdtDN4ljIYYcabSj8')
