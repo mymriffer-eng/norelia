@@ -50,7 +50,6 @@ class InvoiceService:
             subtotal=order.subtotal,
             shipping_cost=order.shipping_cost,
             total=order.total,
-            notes=order.notes
         )
         
         # Copy ordered products into invoice lines (prices are VAT-inclusive)
