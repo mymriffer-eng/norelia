@@ -6,6 +6,14 @@ def _newsletter_token():
     return get_random_string(40)
 
 
+def format_vat_number(value):
+    """VAT number with the BG prefix, or empty string if no value"""
+    value = (value or '').replace(' ', '').upper()
+    if not value:
+        return ''
+    return value if value.startswith('BG') else f'BG{value}'
+
+
 class SiteSettings(models.Model):
     """
     Site-wide settings for Norelia shop.
@@ -56,10 +64,7 @@ class SiteSettings(models.Model):
     @property
     def vat_number(self):
         """VAT number with the BG prefix, or empty if not VAT registered"""
-        value = (self.company_vat_number or '').replace(' ', '').upper()
-        if not value:
-            return ''
-        return value if value.startswith('BG') else f'BG{value}'
+        return format_vat_number(self.company_vat_number)
     
     def save(self, *args, **kwargs):
         # Ensure only one instance exists

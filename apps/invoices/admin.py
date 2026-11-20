@@ -92,10 +92,9 @@ class InvoiceAdmin(admin.ModelAdmin):
                 'customer_address'
             )
         }),
-        ('Фирмени данни', {
+        ('ЕИК и ДДС номер на клиента', {
             'fields': ('company_vat', 'company_vat_number', 'company_mol'),
-            'classes': ('collapse',),
-            'description': 'Попълнете само за фирмени клиенти'
+            'description': 'ДДС номер се попълва само ако клиентът е регистриран по ЗДДС (префиксът BG се добавя автоматично в PDF)'
         }),
         ('Суми (се пресмятат автоматично след запазване)', {
             'fields': (

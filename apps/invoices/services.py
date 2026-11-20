@@ -14,7 +14,7 @@ from reportlab.lib import colors
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from .models import Invoice, InvoiceItem, split_vat, get_vat_rate
-from apps.core.models import SiteSettings
+from apps.core.models import SiteSettings, format_vat_number
 
 
 class ClosingTable(Table):
@@ -244,24 +244,21 @@ class InvoiceService:
         elements.append(info_table)
         elements.append(Spacer(1, 1*cm))
         
-        # Customer info
-        if invoice.is_company:
-            elements.append(Paragraph("<b>Фирмени данни:</b>", styles['Heading3']))
-            customer_data = [
-                ['Фирма:', _clean(invoice.customer_name)],
-                ['ЕИК/Булстат:', _clean(invoice.company_vat) or '-'],
-                ['ДДС номер:', _clean(invoice.company_vat_number) or '-'],
-                ['МОЛ:', _clean(invoice.company_mol) or '-'],
-                ['Телефон:', _clean(invoice.customer_phone)],
-                ['Адрес:', _clean(invoice.customer_address)],
-            ]
-        else:
-            elements.append(Paragraph("<b>Клиент:</b>", styles['Heading3']))
-            customer_data = [
-                ['Име:', _clean(invoice.customer_name)],
-                ['Телефон:', _clean(invoice.customer_phone)],
-                ['Адрес:', _clean(invoice.customer_address)],
-            ]
+        # Customer info (EIK row is always shown; VAT number only for VAT registered customers)
+        elements.append(Paragraph("<b>Клиент:</b>", styles['Heading3']))
+        customer_data = [
+            ['Фирма:' if invoice.is_company else 'Име:', _clean(invoice.customer_name)],
+            ['ЕИК:', _clean(invoice.company_vat)],
+        ]
+        customer_vat_number = format_vat_number(_clean(invoice.company_vat_number))
+        if customer_vat_number:
+            customer_data.append(['ДДС номер:', customer_vat_number])
+        if invoice.is_company and invoice.company_mol:
+            customer_data.append(['МОЛ:', _clean(invoice.company_mol)])
+        customer_data += [
+            ['Телефон:', _clean(invoice.customer_phone)],
+            ['Адрес:', _clean(invoice.customer_address)],
+        ]
         
         customer_data = [[k, Paragraph(escape(v), value_style)] for k, v in customer_data]
         customer_table = Table(customer_data, colWidths=[3*cm, 14*cm], hAlign='LEFT')
