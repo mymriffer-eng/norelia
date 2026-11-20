@@ -178,9 +178,6 @@
             
             <div class="row">
                 <div class="col-12 text-center text-muted">
-                    <p class="small mb-1">
-                        <strong>{{ company.name }}</strong>{% if company.vat %} | ЕИК/БУЛСТАТ: {{ company.vat }}{% endif %}{% if company.address %} | {{ company.address }}{% endif %}
-                    </p>
                     <p>&copy; {% now "Y" %} Norelia Beauty. Всички права запазени.</p>
                     <p class="small">
                         <a href="{% url 'core:terms' %}" class="text-decoration-none text-muted">Общи условия</a> |
