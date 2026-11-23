@@ -141,7 +141,7 @@ class Invoice(models.Model):
     
     @staticmethod
     def generate_invoice_number():
-        """Generate the next sequential invoice number in format: NNNNNN"""
+        """Generate the next sequential invoice number: 10 digits, e.g. 0000000001"""
         from django.conf import settings
         
         last_number = 0
@@ -155,7 +155,7 @@ class Invoice(models.Model):
         else:
             next_number = getattr(settings, 'INVOICE_START_NUMBER', 1)
         
-        return f'{next_number:06d}'
+        return f'{next_number:010d}'
 
 
 class CatalogService(models.Model):
