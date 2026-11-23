@@ -76,6 +76,17 @@
                     <h6>Име:</h6>
                     <p>{{ order.get_full_name }}</p>
                     
+                    {% if order.is_company %}
+                    <h6>Фирма:</h6>
+                    <p>
+                        {{ order.company_name }}<br>
+                        ЕИК: {{ order.company_eik }}
+                        {% if order.company_vat_number %}<br>ДДС номер: {{ order.company_vat_number }}{% endif %}
+                        {% if order.company_mol %}<br>МОЛ: {{ order.company_mol }}{% endif %}
+                        {% if order.company_address %}<br>Адрес: {{ order.company_address }}{% endif %}
+                    </p>
+                    {% endif %}
+                    
                     <h6>Имейл:</h6>
                     <p>{{ order.email }}</p>
                     

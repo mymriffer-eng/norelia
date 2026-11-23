@@ -48,7 +48,15 @@ class Order(models.Model):
     
     # Delivery address
     city = models.CharField(max_length=100, verbose_name='Град')
-    address = models.TextField(verbose_name='Адрес')
+    address = models.TextField(verbose_name='Адрес за доставка')
+    
+    # Company details (for invoices to companies)
+    is_company = models.BooleanField(default=False, verbose_name='Фирмен клиент')
+    company_name = models.CharField(max_length=200, blank=True, verbose_name='Фирма')
+    company_eik = models.CharField(max_length=20, blank=True, verbose_name='ЕИК')
+    company_vat_number = models.CharField(max_length=20, blank=True, verbose_name='ДДС номер')
+    company_mol = models.CharField(max_length=200, blank=True, verbose_name='МОЛ')
+    company_address = models.TextField(blank=True, verbose_name='Адрес на фирмата (за фактура)')
     
     # Order details
     notes = models.TextField(blank=True, verbose_name='Бележки')

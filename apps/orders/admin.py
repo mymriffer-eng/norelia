@@ -32,6 +32,7 @@ class OrderAdmin(admin.ModelAdmin):
         'order_number',
         'first_name',
         'last_name',
+        'company_name',
         'email',
         'phone',
         'user__email'
@@ -45,6 +46,12 @@ class OrderAdmin(admin.ModelAdmin):
         'phone',
         'city',
         'address',
+        'is_company',
+        'company_name',
+        'company_eik',
+        'company_vat_number',
+        'company_mol',
+        'company_address',
         'notes',
         'payment_method',
         'subtotal',
@@ -65,6 +72,9 @@ class OrderAdmin(admin.ModelAdmin):
         }),
         ('Delivery Address', {
             'fields': ('city', 'address')
+        }),
+        ('Company Details', {
+            'fields': ('is_company', 'company_name', 'company_eik', 'company_vat_number', 'company_mol', 'company_address')
         }),
         ('Order Details', {
             'fields': ('notes', 'payment_method')

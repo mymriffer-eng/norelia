@@ -52,6 +52,52 @@
                             </div>
                         </div>
                         
+                        <div class="form-check mb-3">
+                            {{ form.is_company }}
+                            <label class="form-check-label" for="{{ form.is_company.id_for_label }}">{{ form.is_company.label }}</label>
+                        </div>
+                        
+                        <div id="companyFields" class="border rounded p-3 mb-3{% if not form.is_company.value %} d-none{% endif %}">
+                            <h6 class="mb-3">Данни за фактура към фирма</h6>
+                            <div class="mb-3">
+                                {{ form.company_name.label_tag }}
+                                {{ form.company_name }}
+                                {% if form.company_name.errors %}
+                                    <div class="text-danger">{{ form.company_name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    {{ form.company_eik.label_tag }}
+                                    {{ form.company_eik }}
+                                    {% if form.company_eik.errors %}
+                                        <div class="text-danger">{{ form.company_eik.errors }}</div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    {{ form.company_vat_number.label_tag }}
+                                    {{ form.company_vat_number }}
+                                    {% if form.company_vat_number.errors %}
+                                        <div class="text-danger">{{ form.company_vat_number.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                {{ form.company_mol.label_tag }}
+                                {{ form.company_mol }}
+                                {% if form.company_mol.errors %}
+                                    <div class="text-danger">{{ form.company_mol.errors }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="mb-0">
+                                {{ form.company_address.label_tag }}
+                                {{ form.company_address }}
+                                {% if form.company_address.errors %}
+                                    <div class="text-danger">{{ form.company_address.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
                         <div class="mb-3">
                             {{ form.city.label_tag }}
                             {{ form.city }}
@@ -147,4 +193,17 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var toggle = document.getElementById('{{ form.is_company.id_for_label }}');
+    var box = document.getElementById('companyFields');
+    if (!toggle || !box) return;
+    toggle.addEventListener('change', function () {
+        box.classList.toggle('d-none', !toggle.checked);
+    });
+});
+</script>
 {% endblock %}

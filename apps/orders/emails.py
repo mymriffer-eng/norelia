@@ -20,6 +20,19 @@ def _order_url(order):
     return f"{settings.SITE_URL.rstrip('/')}{path}"
 
 
+def _company_text(order):
+    if not order.is_company:
+        return ''
+    lines = [f'Фирма: {order.company_name}', f'ЕИК: {order.company_eik}']
+    if order.company_vat_number:
+        lines.append(f'ДДС номер: {order.company_vat_number}')
+    if order.company_mol:
+        lines.append(f'МОЛ: {order.company_mol}')
+    if order.company_address:
+        lines.append(f'Адрес на фирмата: {order.company_address}')
+    return '\n'.join(lines) + '\n'
+
+
 def _items_text(order):
     lines = []
     for item in order.items.all():
@@ -65,6 +78,7 @@ def send_admin_new_order_email(order):
     body = (
         f'Нова поръчка {order.order_number}\n\n'
         f'Клиент: {order.get_full_name()}\n'
+        f'{_company_text(order)}'
         f'Имейл: {order.email}\n'
         f'Телефон: {order.phone}\n'
         f'Адрес за доставка: {order.city}, {order.address}\n'

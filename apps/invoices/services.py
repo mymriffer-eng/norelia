@@ -54,18 +54,31 @@ class InvoiceService:
         # Generate invoice number
         invoice_number = Invoice.generate_invoice_number()
         
-        # Create invoice
+        # Create invoice (company orders are invoiced to the company)
+        if order.is_company:
+            customer = dict(
+                is_company=True,
+                customer_name=order.company_name,
+                customer_address=order.company_address or f'{order.city}, {order.address}',
+                company_vat=order.company_eik,
+                company_vat_number=order.company_vat_number,
+                company_mol=order.company_mol,
+            )
+        else:
+            customer = dict(
+                customer_name=order.get_full_name(),
+                customer_address=f'{order.city}, {order.address}',
+            )
         invoice = Invoice.objects.create(
             order=order,
             invoice_number=invoice_number,
             invoice_date=timezone.now().date(),
-            customer_name=order.get_full_name(),
             customer_email=order.email,
             customer_phone=order.phone,
-            customer_address=f'{order.city}, {order.address}',
             subtotal=order.subtotal,
             shipping_cost=order.shipping_cost,
             total=order.total,
+            **customer,
         )
         
         # Copy ordered products into invoice lines (prices are VAT-inclusive)
